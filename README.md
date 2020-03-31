@@ -11,8 +11,8 @@
 
 ## 팀원 
 - 팀장 : [김성현](https://github.com/iamGreedy)
-- 팀원 : 김태웅
-- 팀원 : 김남균
+- 팀원 : [김태웅](https://github.com/teeyou)
+- 팀원 : [김남균](https://github.com/namGyunKim)
 
 ## 프로젝트
 
