@@ -1,5 +1,5 @@
 # 2020-1-CECD1-TemporalVariable-8
-
+![logo](https://github.com/CSID-DGU/2020-1-CECD1-TemporalVariable-8/blob/master/res/logo.png?raw=true)
 # 컴퓨터공학종합설계
 - CSE4066-01
 - 주종화 교수님
