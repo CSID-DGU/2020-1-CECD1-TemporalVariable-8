@@ -17,3 +17,8 @@
 ## 프로젝트
 [전장유전체 연관분석을 위한 웹베이스 기반 빅데이터 분석 및 결과 도출 서비스 개발](http://ssms.dongguk.edu/pj/328)
 ### 구현
+
+
+## 도구
+### [Discord](https://discordapp.com/)
+### [Github Desktop](https://desktop.github.com/)
