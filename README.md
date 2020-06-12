@@ -15,8 +15,19 @@
 - 팀원 : [김남균](https://github.com/namGyunKim)
 
 ## 프로젝트
-[전장유전체 연관분석을 위한 웹베이스 기반 빅데이터 분석 및 결과 도출 서비스 개발](http://ssms.dongguk.edu/pj/328)
+탈 중앙화된 배달주문 어플리케이션
 ### 구현
+- [Ethereum](https://ethereum.org/ko/)
+  - [Solidity](https://solidity.readthedocs.io/en/v0.6.10/)
+  - [OpenZeppelin](https://openzeppelin.com/contracts/)
+- [Go](https://golang.org/)
+  - [Gin](https://gin-gonic.com/)
+- [Vue](https://vuejs.org/)
+  - [Typescript](https://www.typescriptlang.org/)
+  - [Vuetify](https://vuetifyjs.com/ko/)
+  - [Vuex](https://vuex.vuejs.org/kr/)
+  - [Vue-Router](https://router.vuejs.org/kr/)
+  
 
 
 ## 도구
