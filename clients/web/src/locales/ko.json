@@ -1,0 +1,64 @@
+{
+  "message": "안녕 i18n !!",
+  "dialog": {
+    "login": {
+      "loginMessage": "맛잇고 계정",
+      "loginButton": "로그인",
+      "loginWithOAuth": "다른 계정으로 로그인하기",
+      "accountForgot": "계정을 잊어 버리셨나요?",
+      "notMember": "회원이 아니신가요?"
+    },
+    "register": {
+      "termOfUse": "이용약관",
+      "termOfUseContent": "@.ko:files.termOfUseContent",
+      "termOfUseAgree": "이용약관에 동의합니다.",
+      "personalData": "개인정보 수집 및 이용",
+      "personalDataContent": "@.ko:files.personalDataContent",
+      "personalDataAgree": "개인정보 수집 및 이용에 동의합니다.",
+      "requireAgree": "진행하려면 동의를 해야 합니다.",
+      "doNext": "계속 진행해 주세요",
+      "cancelButton": "취소하기",
+      "emptyName": "이름을 입력해 주세요.",
+      "emptyEmail": "이메일을 입력해 주세요.",
+      "invalidEmail": "이메일 형식이 올바르지 않습니다.",
+      "noticeAllow": "알림 받기 동의",
+      "whatIsNoticeAllow": "이거 광고 아니에요!\n배달이 출발하거나 도착하는 경우 알려드리는 기능입니다!",
+      "ADAllow": "광고성 정보 수신 동의",
+      "whatIsADAllow": "세일을 놓치지 않는 똑똑한 소비자이신가요?\n새로운 맛을 찾아 떠도는 미식가이신가요?\n그럼 여기에 체크하세요!",
+      "debugLogAllow": "오류 데이터 수집 동의",
+      "whatIsDebugLogAllow": "오류 데이터는 마치 의사선생님의 진료도구와도 같습니다.\n저희는 데이터 없이 오류를 진료하기 힘들답니다.",
+      "registerAlmostComplete": "이제 하단의 회원가입 버튼만 누르시면 맛있는 음식을 원하는 만큼 주문할 수 있습니다!",
+      "directLogin": "바로 로그인하기",
+      "cancelRegister": "회원가입 취소",
+      "cancelRegisterInform": "지금까지 입력한 내용이 모두 지워집니다."
+    }
+  },
+  "nav" : {
+    "search" : "검색",
+    "favorite" : "선호음식점",
+    "history" : "주문기록"
+  },
+  "word": {
+    "name": "이름",
+    "email": "이메일",
+    "phone": "전화번호",
+    "address": "주소",
+    "confirm": "확인",
+    "cancel": "취소"
+  },
+  "famous": {
+    "emailDomains": [
+      "gmail.com",
+      "naver.com",
+      "daum.net",
+      "nate.com"
+    ]
+  },
+  "placeholder": [
+    "공사중입니다! 최대한 빨리 구현하도록 하겠습니다!"
+  ],
+  "files": {
+    "termOfUseContent": "TermOfUseContent.txt",
+    "personalDataContent": "PersonalDataContent.txt"
+  }
+}

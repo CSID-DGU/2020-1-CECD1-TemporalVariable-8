@@ -1,0 +1,11 @@
+{
+  "message": "hello i18n !!",
+  "dialog": {
+    "login": {
+      "register": {
+        "not_member": "Not Member?",
+        "do_registration": "Please Sign Up to continue"
+      }
+    }
+  }
+}

@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package pb;
+
+message RestaurantStatistics { repeated string names = 1; }
+
+message Restaurant {
+  string name = 1;
+  string subName = 2;
+  string url = 3;
+
+  string root = 9;
+  string parent = 10;
+  repeated string children = 12;
+}
+
+message Menus {
+  string owner = 1;
+  repeated Menu menus = 2;
+}
+
+message Menu {
+  int64 id = 1;
+  string name = 2;
+  string description = 3;
+  int64 priceAmount = 4;
+  string currency = 5;
+  string owner = 6;
+  repeated Menu options = 7;
+}
+
+message Auth { 
+  string provider = 1; 
+  string service_id = 2;
+}
+
+message User {
+  Auth auth = 1;
+  string name = 2;
+  string address = 3;
+}
+message File {
+  string name =1;
+  string mime = 2;
+  string create_at = 3;
+  string url = 4;
+}
+
+message OrderField{
+  int64 menu = 1;
+  int32 count = 2;
+}
+
+message Order {
+  repeated OrderField fields = 4;
+}

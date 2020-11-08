@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package ddapp;
+
+message PaymentGateway {
+  string name = 1;
+  string description = 2;
+  //
+  CashPayment cash = 3;
+  CreditCardPayment credit = 4;
+  CryptoCurrencyPayment crypto = 5;
+}
+message CashPayment {
+  //
+  repeated string currencyAvailables = 1;
+}
+
+message CreditCardPayment {
+  // 카드 BIN으로 분류
+  // 인코딩 방식
+  // [ **** **** **** **** ] : 바이너리(16진법)
+  //   ^            ^        : 0~9까지 값으로 구성된 6자리 BIN 값
+  //                  ^  ^   : 사용 안함
+  // 예시 : 5107-37 로 시작하는 신한카드의 경우
+  // [ 0x51 0x07 0x37 ---- ]
+  // 예시 : 5388-11 로 시작하는 NH카드의 경우
+  // [ 0x53 0x88 0x11 ---- ]
+  repeated uint32 cardAvailables = 1;
+}
+
+message CryptoCurrencyPayment { repeated string cryptoAvailables = 1; }

@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package ddapp;
+
+import "google/protobuf/any.proto";
+import "Asset.proto";
+import "Restaurant.proto";
+import "Payment.proto";
+
+message Service {
+  EthID id = 1;
+  ServiceType type = 2;
+  //
+  oneof service{
+    Restaurant restaurant = 3;
+    PaymentGateway pg = 4;
+    google.protobuf.Any unknown = 13;
+  }
+  repeated google.protobuf.Any hint = 14;
+}
+enum ServiceType{
+    // 10번부터는 추후 추가될 서비스 종류를 구분하기 위해 분리되어 있음
+    reserved 10 to max;
+    //
+    ServiceSearcher = 0;
+    ServiceRestaurant = 1;
+    ServicePG = 2;
+    ServiceDelivery = 3;
+    ServiceHost = 4;
+}

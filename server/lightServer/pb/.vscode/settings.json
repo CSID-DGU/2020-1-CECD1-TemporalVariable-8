@@ -1,0 +1,14 @@
+{
+    "protoc": {
+        "path": "E:\\usr\\protoc-3.11.4-win64\\bin\\protoc.exe",
+        "compile_on_save": false,
+        "options": [
+            "--proto_path=${workspaceRoot}",
+            "--proto_path=${env.GOPATH}/src",
+            "--proto_path=${env.GOPATH}/src/github.com/envoyproxy/protoc-gen-validate",
+            
+            "--go_out=${workspaceRoot}",
+            "--validate_out=lang=go:${workspaceRoot}"
+        ]
+    }
+}

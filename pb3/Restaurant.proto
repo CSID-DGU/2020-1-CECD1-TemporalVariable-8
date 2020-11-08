@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package ddapp;
+
+import "Asset.proto";
+
+message Restaurant {
+  // == 표시용 정보 ==
+  string name = 1;
+  string description = 2;
+  Image avatar = 3;
+}
+
+message Food {
+  uint32 id = 1;
+  string name = 2;
+  string description = 3;
+  Image avatar = 4;
+  Money price = 5;
+  //
+  repeated FoodOption options = 10;
+}
+
+message FoodOption {
+  string description = 1;
+  enum SelectType {
+    Exclusive = 0;
+    Many = 1;
+  }
+  SelectType selectWay = 2;
+  repeated NameMoney selectors = 3;
+}
+message NameMoney {
+  string name = 1;
+  Money price = 2;
+}

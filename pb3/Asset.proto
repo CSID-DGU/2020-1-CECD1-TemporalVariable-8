@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package ddapp;
+
+message Image {
+  string name = 1;
+  string format = 2;
+  oneof source {
+    bytes raw = 11;
+    string link = 12;
+  }
+}
+
+// https://github.com/googleapis/googleapis/blob/master/google/type/money.proto
+// 참조함
+message Money {
+  // 국제 통화 식별 기호
+  string currency = 1;
+  // 단위
+  int64 unit = 2;
+  // 단위(나노)
+  // 제약사항은 구글의 제약과 같음
+  int32 nano = 3;
+}
+
+// https://github.com/googleapis/googleapis/blob/master/google/type/latlng.proto
+// 해당 내용을 참조함
+message LatLng {
+  // 위도는 각도(degree 방식)으로 표기. [-90.0, +90.0] 내의 범위만 허용.
+  double latitude = 1;
+  // 경도는 각도(degree 방식)으로 표기. [-180.0, +180.0] 내의 범위만 허용.
+  double longitude = 2;
+}
+
+// 범위 표시
+message LatLngRange {
+  // 중심
+  LatLng center = 1;
+  // 중심으로부터 반경
+  // 단위는 미터
+  double radius = 2;
+}
+
+message EthID {
+    // manager필드는 이더리움 주소이다. 
+    // 크기는 고정 128비트, 16바이트이다.
+    bytes manager = 1;
+    // subid 필드는 한 이더리움 주소가 여러 서비스를 관리하는 경우 할당하는 코드이다.
+    // subid 0번은 반드시 존재해야 한다.
+    // 만약 여러개의 subid를 가진 이더리움 계정이라면 있다면 그 중 하나는 반드시 subid가 0이여야 한다.
+    uint64 subid = 2;
+}

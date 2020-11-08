@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="03bc8b75-492f-4c25-aac6-483e650ab801" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/../../clients/web/.env" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../clients/web/src/components/Restaurant.vue" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../clients/web/src/components/TopBar.vue" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../clients/web/src/views/Favorite.vue" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../clients/web/src/views/Order.vue" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../clients/web/src/views/Request.vue" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../clients/web/src/views/Shops.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../../clients/web/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../clients/web/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../clients/web/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/src/App.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../../clients/web/src/App.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/src/assets/logo.png" beforeDir="false" afterPath="$PROJECT_DIR$/../../clients/web/src/assets/logo.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/src/assets/logo.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/src/classes/ddapp/core.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../clients/web/src/classes/ddapp/core.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/src/classes/ddapp/query.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../clients/web/src/classes/ddapp/query.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/src/classes/ddapp/restaurant.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../clients/web/src/classes/ddapp/restaurant.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/src/classes/mock/mock.bc.net.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../clients/web/src/classes/mock/mock.bc.net.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/src/classes/mock/utils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../clients/web/src/classes/mock/utils.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/src/components/HelloWorld.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/src/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../clients/web/src/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/src/plugins/vuetify.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../clients/web/src/plugins/vuetify.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/src/router/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../clients/web/src/router/index.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/src/store/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../clients/web/src/store/sddapp.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/src/views/Home.vue" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../clients/web/tests/unit/blockchain.spec.ts" beforeDir="false" afterPath="$PROJECT_DIR$/../../clients/web/tests/unit/blockchain.spec.ts" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="ProjectId" id="1fRnjG01143P7m7WMERQrDjp143" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="go.import.settings.migrated" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="1499" y="441" key="FileChooserDialogImpl" timestamp="1596190016806">
+      <screen x="0" y="0" width="3440" height="1400" />
+    </state>
+    <state x="1499" y="441" key="FileChooserDialogImpl/0.0.3440.1400@0.0.3440.1400" timestamp="1596190016806" />
+  </component>
+</project>
