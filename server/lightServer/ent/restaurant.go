@@ -3,11 +3,10 @@
 package ent
 
 import (
-	"encoding/json"
 	"fmt"
 	"lightServer/ent/file"
 	"lightServer/ent/restaurant"
-	"net/url"
+	"lightServer/ent/user"
 	"strings"
 
 	"github.com/facebook/ent/dialect/sql"
@@ -20,13 +19,14 @@ type Restaurant struct {
 	ID int `json:"id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
-	// SubName holds the value of the "sub_name" field.
-	SubName string `json:"sub_name,omitempty"`
+	// Description holds the value of the "description" field.
+	Description string `json:"description,omitempty"`
 	// URI holds the value of the "uri" field.
-	URI *url.URL `json:"uri,omitempty"`
+	URI string `json:"uri,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RestaurantQuery when eager-loading is set.
 	Edges             RestaurantEdges `json:"edges"`
+	restaurant_owner  *int
 	restaurant_avatar *int
 	restaurant_root   *int
 	restaurant_parent *int
@@ -34,6 +34,8 @@ type Restaurant struct {
 
 // RestaurantEdges holds the relations/edges for other nodes in the graph.
 type RestaurantEdges struct {
+	// Owner holds the value of the owner edge.
+	Owner *User
 	// Avatar holds the value of the avatar edge.
 	Avatar *File
 	// Root holds the value of the root edge.
@@ -44,17 +46,35 @@ type RestaurantEdges struct {
 	Parent *Restaurant
 	// Histories holds the value of the histories edge.
 	Histories []*History
+	// Categories holds the value of the categories edge.
+	Categories []*Category
+	// Orders holds the value of the orders edge.
+	Orders []*Order
 	// Menus holds the value of the menus edge.
 	Menus []*Menu
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [9]bool
+}
+
+// OwnerOrErr returns the Owner value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e RestaurantEdges) OwnerOrErr() (*User, error) {
+	if e.loadedTypes[0] {
+		if e.Owner == nil {
+			// The edge owner was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: user.Label}
+		}
+		return e.Owner, nil
+	}
+	return nil, &NotLoadedError{edge: "owner"}
 }
 
 // AvatarOrErr returns the Avatar value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e RestaurantEdges) AvatarOrErr() (*File, error) {
-	if e.loadedTypes[0] {
+	if e.loadedTypes[1] {
 		if e.Avatar == nil {
 			// The edge avatar was loaded in eager-loading,
 			// but was not found.
@@ -68,7 +88,7 @@ func (e RestaurantEdges) AvatarOrErr() (*File, error) {
 // RootOrErr returns the Root value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e RestaurantEdges) RootOrErr() (*Restaurant, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		if e.Root == nil {
 			// The edge root was loaded in eager-loading,
 			// but was not found.
@@ -82,7 +102,7 @@ func (e RestaurantEdges) RootOrErr() (*Restaurant, error) {
 // ChildrenOrErr returns the Children value or an error if the edge
 // was not loaded in eager-loading.
 func (e RestaurantEdges) ChildrenOrErr() ([]*Restaurant, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.Children, nil
 	}
 	return nil, &NotLoadedError{edge: "children"}
@@ -91,7 +111,7 @@ func (e RestaurantEdges) ChildrenOrErr() ([]*Restaurant, error) {
 // ParentOrErr returns the Parent value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e RestaurantEdges) ParentOrErr() (*Restaurant, error) {
-	if e.loadedTypes[3] {
+	if e.loadedTypes[4] {
 		if e.Parent == nil {
 			// The edge parent was loaded in eager-loading,
 			// but was not found.
@@ -105,16 +125,34 @@ func (e RestaurantEdges) ParentOrErr() (*Restaurant, error) {
 // HistoriesOrErr returns the Histories value or an error if the edge
 // was not loaded in eager-loading.
 func (e RestaurantEdges) HistoriesOrErr() ([]*History, error) {
-	if e.loadedTypes[4] {
+	if e.loadedTypes[5] {
 		return e.Histories, nil
 	}
 	return nil, &NotLoadedError{edge: "histories"}
 }
 
+// CategoriesOrErr returns the Categories value or an error if the edge
+// was not loaded in eager-loading.
+func (e RestaurantEdges) CategoriesOrErr() ([]*Category, error) {
+	if e.loadedTypes[6] {
+		return e.Categories, nil
+	}
+	return nil, &NotLoadedError{edge: "categories"}
+}
+
+// OrdersOrErr returns the Orders value or an error if the edge
+// was not loaded in eager-loading.
+func (e RestaurantEdges) OrdersOrErr() ([]*Order, error) {
+	if e.loadedTypes[7] {
+		return e.Orders, nil
+	}
+	return nil, &NotLoadedError{edge: "orders"}
+}
+
 // MenusOrErr returns the Menus value or an error if the edge
 // was not loaded in eager-loading.
 func (e RestaurantEdges) MenusOrErr() ([]*Menu, error) {
-	if e.loadedTypes[5] {
+	if e.loadedTypes[8] {
 		return e.Menus, nil
 	}
 	return nil, &NotLoadedError{edge: "menus"}
@@ -125,14 +163,15 @@ func (*Restaurant) scanValues() []interface{} {
 	return []interface{}{
 		&sql.NullInt64{},  // id
 		&sql.NullString{}, // name
-		&sql.NullString{}, // sub_name
-		&[]byte{},         // uri
+		&sql.NullString{}, // description
+		&sql.NullString{}, // uri
 	}
 }
 
 // fkValues returns the types for scanning foreign-keys values from sql.Rows.
 func (*Restaurant) fkValues() []interface{} {
 	return []interface{}{
+		&sql.NullInt64{}, // restaurant_owner
 		&sql.NullInt64{}, // restaurant_avatar
 		&sql.NullInt64{}, // restaurant_root
 		&sql.NullInt64{}, // restaurant_parent
@@ -157,33 +196,36 @@ func (r *Restaurant) assignValues(values ...interface{}) error {
 		r.Name = value.String
 	}
 	if value, ok := values[1].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field sub_name", values[1])
+		return fmt.Errorf("unexpected type %T for field description", values[1])
 	} else if value.Valid {
-		r.SubName = value.String
+		r.Description = value.String
 	}
-
-	if value, ok := values[2].(*[]byte); !ok {
+	if value, ok := values[2].(*sql.NullString); !ok {
 		return fmt.Errorf("unexpected type %T for field uri", values[2])
-	} else if value != nil && len(*value) > 0 {
-		if err := json.Unmarshal(*value, &r.URI); err != nil {
-			return fmt.Errorf("unmarshal field uri: %v", err)
-		}
+	} else if value.Valid {
+		r.URI = value.String
 	}
 	values = values[3:]
 	if len(values) == len(restaurant.ForeignKeys) {
 		if value, ok := values[0].(*sql.NullInt64); !ok {
+			return fmt.Errorf("unexpected type %T for edge-field restaurant_owner", value)
+		} else if value.Valid {
+			r.restaurant_owner = new(int)
+			*r.restaurant_owner = int(value.Int64)
+		}
+		if value, ok := values[1].(*sql.NullInt64); !ok {
 			return fmt.Errorf("unexpected type %T for edge-field restaurant_avatar", value)
 		} else if value.Valid {
 			r.restaurant_avatar = new(int)
 			*r.restaurant_avatar = int(value.Int64)
 		}
-		if value, ok := values[1].(*sql.NullInt64); !ok {
+		if value, ok := values[2].(*sql.NullInt64); !ok {
 			return fmt.Errorf("unexpected type %T for edge-field restaurant_root", value)
 		} else if value.Valid {
 			r.restaurant_root = new(int)
 			*r.restaurant_root = int(value.Int64)
 		}
-		if value, ok := values[2].(*sql.NullInt64); !ok {
+		if value, ok := values[3].(*sql.NullInt64); !ok {
 			return fmt.Errorf("unexpected type %T for edge-field restaurant_parent", value)
 		} else if value.Valid {
 			r.restaurant_parent = new(int)
@@ -191,6 +233,11 @@ func (r *Restaurant) assignValues(values ...interface{}) error {
 		}
 	}
 	return nil
+}
+
+// QueryOwner queries the owner edge of the Restaurant.
+func (r *Restaurant) QueryOwner() *UserQuery {
+	return (&RestaurantClient{config: r.config}).QueryOwner(r)
 }
 
 // QueryAvatar queries the avatar edge of the Restaurant.
@@ -216,6 +263,16 @@ func (r *Restaurant) QueryParent() *RestaurantQuery {
 // QueryHistories queries the histories edge of the Restaurant.
 func (r *Restaurant) QueryHistories() *HistoryQuery {
 	return (&RestaurantClient{config: r.config}).QueryHistories(r)
+}
+
+// QueryCategories queries the categories edge of the Restaurant.
+func (r *Restaurant) QueryCategories() *CategoryQuery {
+	return (&RestaurantClient{config: r.config}).QueryCategories(r)
+}
+
+// QueryOrders queries the orders edge of the Restaurant.
+func (r *Restaurant) QueryOrders() *OrderQuery {
+	return (&RestaurantClient{config: r.config}).QueryOrders(r)
 }
 
 // QueryMenus queries the menus edge of the Restaurant.
@@ -248,10 +305,10 @@ func (r *Restaurant) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v", r.ID))
 	builder.WriteString(", name=")
 	builder.WriteString(r.Name)
-	builder.WriteString(", sub_name=")
-	builder.WriteString(r.SubName)
+	builder.WriteString(", description=")
+	builder.WriteString(r.Description)
 	builder.WriteString(", uri=")
-	builder.WriteString(fmt.Sprintf("%v", r.URI))
+	builder.WriteString(r.URI)
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -106,6 +106,13 @@ func Description(v string) predicate.Menu {
 	})
 }
 
+// IsOption applies equality check predicate on the "isOption" field. It's identical to IsOptionEQ.
+func IsOption(v bool) predicate.Menu {
+	return predicate.Menu(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldIsOption), v))
+	})
+}
+
 // NameEQ applies the EQ predicate on the "name" field.
 func NameEQ(v string) predicate.Menu {
 	return predicate.Menu(func(s *sql.Selector) {
@@ -328,6 +335,20 @@ func DescriptionContainsFold(v string) predicate.Menu {
 	})
 }
 
+// IsOptionEQ applies the EQ predicate on the "isOption" field.
+func IsOptionEQ(v bool) predicate.Menu {
+	return predicate.Menu(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldIsOption), v))
+	})
+}
+
+// IsOptionNEQ applies the NEQ predicate on the "isOption" field.
+func IsOptionNEQ(v bool) predicate.Menu {
+	return predicate.Menu(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldIsOption), v))
+	})
+}
+
 // PriceIsNil applies the IsNil predicate on the "price" field.
 func PriceIsNil() predicate.Menu {
 	return predicate.Menu(func(s *sql.Selector) {
@@ -370,13 +391,41 @@ func HasOwnerWith(preds ...predicate.Restaurant) predicate.Menu {
 	})
 }
 
+// HasCategory applies the HasEdge predicate on the "category" edge.
+func HasCategory() predicate.Menu {
+	return predicate.Menu(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(CategoryTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, CategoryTable, CategoryPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCategoryWith applies the HasEdge predicate on the "category" edge with a given conditions (other predicates).
+func HasCategoryWith(preds ...predicate.Category) predicate.Menu {
+	return predicate.Menu(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(CategoryInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, CategoryTable, CategoryPrimaryKey...),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasImages applies the HasEdge predicate on the "images" edge.
 func HasImages() predicate.Menu {
 	return predicate.Menu(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(ImagesTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ImagesTable, ImagesColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, ImagesTable, ImagesColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -388,7 +437,7 @@ func HasImagesWith(preds ...predicate.File) predicate.Menu {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(ImagesInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ImagesTable, ImagesColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, ImagesTable, ImagesColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

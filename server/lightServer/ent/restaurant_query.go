@@ -7,11 +7,14 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"lightServer/ent/category"
 	"lightServer/ent/file"
 	"lightServer/ent/history"
 	"lightServer/ent/menu"
+	"lightServer/ent/order"
 	"lightServer/ent/predicate"
 	"lightServer/ent/restaurant"
+	"lightServer/ent/user"
 	"math"
 
 	"github.com/facebook/ent/dialect/sql"
@@ -28,13 +31,16 @@ type RestaurantQuery struct {
 	unique     []string
 	predicates []predicate.Restaurant
 	// eager-loading edges.
-	withAvatar    *FileQuery
-	withRoot      *RestaurantQuery
-	withChildren  *RestaurantQuery
-	withParent    *RestaurantQuery
-	withHistories *HistoryQuery
-	withMenus     *MenuQuery
-	withFKs       bool
+	withOwner      *UserQuery
+	withAvatar     *FileQuery
+	withRoot       *RestaurantQuery
+	withChildren   *RestaurantQuery
+	withParent     *RestaurantQuery
+	withHistories  *HistoryQuery
+	withCategories *CategoryQuery
+	withOrders     *OrderQuery
+	withMenus      *MenuQuery
+	withFKs        bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -62,6 +68,28 @@ func (rq *RestaurantQuery) Offset(offset int) *RestaurantQuery {
 func (rq *RestaurantQuery) Order(o ...OrderFunc) *RestaurantQuery {
 	rq.order = append(rq.order, o...)
 	return rq
+}
+
+// QueryOwner chains the current query on the owner edge.
+func (rq *RestaurantQuery) QueryOwner() *UserQuery {
+	query := &UserQuery{config: rq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery()
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(restaurant.Table, restaurant.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, restaurant.OwnerTable, restaurant.OwnerColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // QueryAvatar chains the current query on the avatar edge.
@@ -167,6 +195,50 @@ func (rq *RestaurantQuery) QueryHistories() *HistoryQuery {
 			sqlgraph.From(restaurant.Table, restaurant.FieldID, selector),
 			sqlgraph.To(history.Table, history.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, restaurant.HistoriesTable, restaurant.HistoriesPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCategories chains the current query on the categories edge.
+func (rq *RestaurantQuery) QueryCategories() *CategoryQuery {
+	query := &CategoryQuery{config: rq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery()
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(restaurant.Table, restaurant.FieldID, selector),
+			sqlgraph.To(category.Table, category.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, restaurant.CategoriesTable, restaurant.CategoriesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryOrders chains the current query on the orders edge.
+func (rq *RestaurantQuery) QueryOrders() *OrderQuery {
+	query := &OrderQuery{config: rq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery()
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(restaurant.Table, restaurant.FieldID, selector),
+			sqlgraph.To(order.Table, order.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, restaurant.OrdersTable, restaurant.OrdersColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -375,6 +447,17 @@ func (rq *RestaurantQuery) Clone() *RestaurantQuery {
 	}
 }
 
+//  WithOwner tells the query-builder to eager-loads the nodes that are connected to
+// the "owner" edge. The optional arguments used to configure the query builder of the edge.
+func (rq *RestaurantQuery) WithOwner(opts ...func(*UserQuery)) *RestaurantQuery {
+	query := &UserQuery{config: rq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withOwner = query
+	return rq
+}
+
 //  WithAvatar tells the query-builder to eager-loads the nodes that are connected to
 // the "avatar" edge. The optional arguments used to configure the query builder of the edge.
 func (rq *RestaurantQuery) WithAvatar(opts ...func(*FileQuery)) *RestaurantQuery {
@@ -427,6 +510,28 @@ func (rq *RestaurantQuery) WithHistories(opts ...func(*HistoryQuery)) *Restauran
 		opt(query)
 	}
 	rq.withHistories = query
+	return rq
+}
+
+//  WithCategories tells the query-builder to eager-loads the nodes that are connected to
+// the "categories" edge. The optional arguments used to configure the query builder of the edge.
+func (rq *RestaurantQuery) WithCategories(opts ...func(*CategoryQuery)) *RestaurantQuery {
+	query := &CategoryQuery{config: rq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withCategories = query
+	return rq
+}
+
+//  WithOrders tells the query-builder to eager-loads the nodes that are connected to
+// the "orders" edge. The optional arguments used to configure the query builder of the edge.
+func (rq *RestaurantQuery) WithOrders(opts ...func(*OrderQuery)) *RestaurantQuery {
+	query := &OrderQuery{config: rq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withOrders = query
 	return rq
 }
 
@@ -508,16 +613,19 @@ func (rq *RestaurantQuery) sqlAll(ctx context.Context) ([]*Restaurant, error) {
 		nodes       = []*Restaurant{}
 		withFKs     = rq.withFKs
 		_spec       = rq.querySpec()
-		loadedTypes = [6]bool{
+		loadedTypes = [9]bool{
+			rq.withOwner != nil,
 			rq.withAvatar != nil,
 			rq.withRoot != nil,
 			rq.withChildren != nil,
 			rq.withParent != nil,
 			rq.withHistories != nil,
+			rq.withCategories != nil,
+			rq.withOrders != nil,
 			rq.withMenus != nil,
 		}
 	)
-	if rq.withAvatar != nil || rq.withRoot != nil || rq.withParent != nil {
+	if rq.withOwner != nil || rq.withAvatar != nil || rq.withRoot != nil || rq.withParent != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -545,6 +653,31 @@ func (rq *RestaurantQuery) sqlAll(ctx context.Context) ([]*Restaurant, error) {
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
+	}
+
+	if query := rq.withOwner; query != nil {
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Restaurant)
+		for i := range nodes {
+			if fk := nodes[i].restaurant_owner; fk != nil {
+				ids = append(ids, *fk)
+				nodeids[*fk] = append(nodeids[*fk], nodes[i])
+			}
+		}
+		query.Where(user.IDIn(ids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := nodeids[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "restaurant_owner" returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Owner = n
+			}
+		}
 	}
 
 	if query := rq.withAvatar; query != nil {
@@ -710,6 +843,62 @@ func (rq *RestaurantQuery) sqlAll(ctx context.Context) ([]*Restaurant, error) {
 			for i := range nodes {
 				nodes[i].Edges.Histories = append(nodes[i].Edges.Histories, n)
 			}
+		}
+	}
+
+	if query := rq.withCategories; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*Restaurant)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+		}
+		query.withFKs = true
+		query.Where(predicate.Category(func(s *sql.Selector) {
+			s.Where(sql.InValues(restaurant.CategoriesColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.category_owner
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "category_owner" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "category_owner" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Categories = append(node.Edges.Categories, n)
+		}
+	}
+
+	if query := rq.withOrders; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*Restaurant)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+		}
+		query.withFKs = true
+		query.Where(predicate.Order(func(s *sql.Selector) {
+			s.Where(sql.InValues(restaurant.OrdersColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.order_where
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "order_where" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "order_where" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.Orders = append(node.Edges.Orders, n)
 		}
 	}
 

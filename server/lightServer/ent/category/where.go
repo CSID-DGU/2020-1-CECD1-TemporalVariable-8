@@ -244,7 +244,7 @@ func HasMenus() predicate.Category {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(MenusTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, MenusTable, MenusColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, MenusTable, MenusPrimaryKey...),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -256,7 +256,7 @@ func HasMenusWith(preds ...predicate.Menu) predicate.Category {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(MenusInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, MenusTable, MenusColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, MenusTable, MenusPrimaryKey...),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

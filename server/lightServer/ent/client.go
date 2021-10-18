@@ -391,7 +391,7 @@ func (c *CategoryClient) QueryMenus(ca *Category) *MenuQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(category.Table, category.FieldID, id),
 			sqlgraph.To(menu.Table, menu.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, category.MenusTable, category.MenusColumn),
+			sqlgraph.Edge(sqlgraph.M2M, false, category.MenusTable, category.MenusPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(ca.driver.Dialect(), step)
 		return fromV, nil
@@ -695,6 +695,22 @@ func (c *MenuClient) QueryOwner(m *Menu) *RestaurantQuery {
 	return query
 }
 
+// QueryCategory queries the category edge of a Menu.
+func (c *MenuClient) QueryCategory(m *Menu) *CategoryQuery {
+	query := &CategoryQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(menu.Table, menu.FieldID, id),
+			sqlgraph.To(category.Table, category.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, menu.CategoryTable, menu.CategoryPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryImages queries the images edge of a Menu.
 func (c *MenuClient) QueryImages(m *Menu) *FileQuery {
 	query := &FileQuery{config: c.config}
@@ -703,7 +719,7 @@ func (c *MenuClient) QueryImages(m *Menu) *FileQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(menu.Table, menu.FieldID, id),
 			sqlgraph.To(file.Table, file.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, menu.ImagesTable, menu.ImagesColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, menu.ImagesTable, menu.ImagesColumn),
 		)
 		fromV = sqlgraph.Neighbors(m.driver.Dialect(), step)
 		return fromV, nil
@@ -815,22 +831,6 @@ func (c *OrderClient) GetX(ctx context.Context, id int) *Order {
 	return obj
 }
 
-// QueryItems queries the items edge of a Order.
-func (c *OrderClient) QueryItems(o *Order) *OrderFieldQuery {
-	query := &OrderFieldQuery{config: c.config}
-	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
-		id := o.ID
-		step := sqlgraph.NewStep(
-			sqlgraph.From(order.Table, order.FieldID, id),
-			sqlgraph.To(orderfield.Table, orderfield.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, order.ItemsTable, order.ItemsColumn),
-		)
-		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
-		return fromV, nil
-	}
-	return query
-}
-
 // QueryWho queries the who edge of a Order.
 func (c *OrderClient) QueryWho(o *Order) *UserQuery {
 	query := &UserQuery{config: c.config}
@@ -840,6 +840,38 @@ func (c *OrderClient) QueryWho(o *Order) *UserQuery {
 			sqlgraph.From(order.Table, order.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, order.WhoTable, order.WhoColumn),
+		)
+		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryWhere queries the where edge of a Order.
+func (c *OrderClient) QueryWhere(o *Order) *RestaurantQuery {
+	query := &RestaurantQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := o.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(order.Table, order.FieldID, id),
+			sqlgraph.To(restaurant.Table, restaurant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, order.WhereTable, order.WhereColumn),
+		)
+		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryItems queries the items edge of a Order.
+func (c *OrderClient) QueryItems(o *Order) *OrderFieldQuery {
+	query := &OrderFieldQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := o.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(order.Table, order.FieldID, id),
+			sqlgraph.To(orderfield.Table, orderfield.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, order.ItemsTable, order.ItemsColumn),
 		)
 		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
 		return fromV, nil
@@ -943,7 +975,7 @@ func (c *OrderFieldClient) QueryMenu(of *OrderField) *MenuQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(orderfield.Table, orderfield.FieldID, id),
 			sqlgraph.To(menu.Table, menu.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, orderfield.MenuTable, orderfield.MenuColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, orderfield.MenuTable, orderfield.MenuColumn),
 		)
 		fromV = sqlgraph.Neighbors(of.driver.Dialect(), step)
 		return fromV, nil
@@ -1039,6 +1071,22 @@ func (c *RestaurantClient) GetX(ctx context.Context, id int) *Restaurant {
 	return obj
 }
 
+// QueryOwner queries the owner edge of a Restaurant.
+func (c *RestaurantClient) QueryOwner(r *Restaurant) *UserQuery {
+	query := &UserQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(restaurant.Table, restaurant.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, restaurant.OwnerTable, restaurant.OwnerColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryAvatar queries the avatar edge of a Restaurant.
 func (c *RestaurantClient) QueryAvatar(r *Restaurant) *FileQuery {
 	query := &FileQuery{config: c.config}
@@ -1112,6 +1160,38 @@ func (c *RestaurantClient) QueryHistories(r *Restaurant) *HistoryQuery {
 			sqlgraph.From(restaurant.Table, restaurant.FieldID, id),
 			sqlgraph.To(history.Table, history.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, restaurant.HistoriesTable, restaurant.HistoriesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCategories queries the categories edge of a Restaurant.
+func (c *RestaurantClient) QueryCategories(r *Restaurant) *CategoryQuery {
+	query := &CategoryQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(restaurant.Table, restaurant.FieldID, id),
+			sqlgraph.To(category.Table, category.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, restaurant.CategoriesTable, restaurant.CategoriesColumn),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryOrders queries the orders edge of a Restaurant.
+func (c *RestaurantClient) QueryOrders(r *Restaurant) *OrderQuery {
+	query := &OrderQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(restaurant.Table, restaurant.FieldID, id),
+			sqlgraph.To(order.Table, order.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, restaurant.OrdersTable, restaurant.OrdersColumn),
 		)
 		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
 		return fromV, nil

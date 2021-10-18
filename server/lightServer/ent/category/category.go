@@ -24,13 +24,11 @@ const (
 	OwnerInverseTable = "restaurants"
 	// OwnerColumn is the table column denoting the owner relation/edge.
 	OwnerColumn = "category_owner"
-	// MenusTable is the table the holds the menus relation/edge.
-	MenusTable = "menus"
+	// MenusTable is the table the holds the menus relation/edge. The primary key declared below.
+	MenusTable = "category_menus"
 	// MenusInverseTable is the table name for the Menu entity.
 	// It exists in this package in order to avoid circular dependency with the "menu" package.
 	MenusInverseTable = "menus"
-	// MenusColumn is the table column denoting the menus relation/edge.
-	MenusColumn = "category_menus"
 )
 
 // Columns holds all SQL columns for category fields.
@@ -43,6 +41,12 @@ var Columns = []string{
 var ForeignKeys = []string{
 	"category_owner",
 }
+
+var (
+	// MenusPrimaryKey and MenusColumn2 are the table columns denoting the
+	// primary key for the menus relation (M2M).
+	MenusPrimaryKey = []string{"category_id", "menu_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {

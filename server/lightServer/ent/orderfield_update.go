@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"lightServer/ent/menu"
 	"lightServer/ent/orderfield"
@@ -41,19 +42,15 @@ func (ofu *OrderFieldUpdate) AddCount(u uint16) *OrderFieldUpdate {
 	return ofu
 }
 
-// AddMenuIDs adds the menu edge to Menu by ids.
-func (ofu *OrderFieldUpdate) AddMenuIDs(ids ...int) *OrderFieldUpdate {
-	ofu.mutation.AddMenuIDs(ids...)
+// SetMenuID sets the menu edge to Menu by id.
+func (ofu *OrderFieldUpdate) SetMenuID(id int) *OrderFieldUpdate {
+	ofu.mutation.SetMenuID(id)
 	return ofu
 }
 
-// AddMenu adds the menu edges to Menu.
-func (ofu *OrderFieldUpdate) AddMenu(m ...*Menu) *OrderFieldUpdate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
-	}
-	return ofu.AddMenuIDs(ids...)
+// SetMenu sets the menu edge to Menu.
+func (ofu *OrderFieldUpdate) SetMenu(m *Menu) *OrderFieldUpdate {
+	return ofu.SetMenuID(m.ID)
 }
 
 // Mutation returns the OrderFieldMutation object of the builder.
@@ -61,25 +58,10 @@ func (ofu *OrderFieldUpdate) Mutation() *OrderFieldMutation {
 	return ofu.mutation
 }
 
-// ClearMenu clears all "menu" edges to type Menu.
+// ClearMenu clears the "menu" edge to type Menu.
 func (ofu *OrderFieldUpdate) ClearMenu() *OrderFieldUpdate {
 	ofu.mutation.ClearMenu()
 	return ofu
-}
-
-// RemoveMenuIDs removes the menu edge to Menu by ids.
-func (ofu *OrderFieldUpdate) RemoveMenuIDs(ids ...int) *OrderFieldUpdate {
-	ofu.mutation.RemoveMenuIDs(ids...)
-	return ofu
-}
-
-// RemoveMenu removes menu edges to Menu.
-func (ofu *OrderFieldUpdate) RemoveMenu(m ...*Menu) *OrderFieldUpdate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
-	}
-	return ofu.RemoveMenuIDs(ids...)
 }
 
 // Save executes the query and returns the number of rows/vertices matched by this operation.
@@ -146,6 +128,9 @@ func (ofu *OrderFieldUpdate) check() error {
 			return &ValidationError{Name: "count", err: fmt.Errorf("ent: validator failed for field \"count\": %w", err)}
 		}
 	}
+	if _, ok := ofu.mutation.MenuID(); ofu.mutation.MenuCleared() && !ok {
+		return errors.New("ent: clearing a required unique edge \"menu\"")
+	}
 	return nil
 }
 
@@ -183,7 +168,7 @@ func (ofu *OrderFieldUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if ofu.mutation.MenuCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   orderfield.MenuTable,
 			Columns: []string{orderfield.MenuColumn},
@@ -194,31 +179,12 @@ func (ofu *OrderFieldUpdate) sqlSave(ctx context.Context) (n int, err error) {
 					Column: menu.FieldID,
 				},
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ofu.mutation.RemovedMenuIDs(); len(nodes) > 0 && !ofu.mutation.MenuCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   orderfield.MenuTable,
-			Columns: []string{orderfield.MenuColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: menu.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := ofu.mutation.MenuIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   orderfield.MenuTable,
 			Columns: []string{orderfield.MenuColumn},
@@ -266,19 +232,15 @@ func (ofuo *OrderFieldUpdateOne) AddCount(u uint16) *OrderFieldUpdateOne {
 	return ofuo
 }
 
-// AddMenuIDs adds the menu edge to Menu by ids.
-func (ofuo *OrderFieldUpdateOne) AddMenuIDs(ids ...int) *OrderFieldUpdateOne {
-	ofuo.mutation.AddMenuIDs(ids...)
+// SetMenuID sets the menu edge to Menu by id.
+func (ofuo *OrderFieldUpdateOne) SetMenuID(id int) *OrderFieldUpdateOne {
+	ofuo.mutation.SetMenuID(id)
 	return ofuo
 }
 
-// AddMenu adds the menu edges to Menu.
-func (ofuo *OrderFieldUpdateOne) AddMenu(m ...*Menu) *OrderFieldUpdateOne {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
-	}
-	return ofuo.AddMenuIDs(ids...)
+// SetMenu sets the menu edge to Menu.
+func (ofuo *OrderFieldUpdateOne) SetMenu(m *Menu) *OrderFieldUpdateOne {
+	return ofuo.SetMenuID(m.ID)
 }
 
 // Mutation returns the OrderFieldMutation object of the builder.
@@ -286,25 +248,10 @@ func (ofuo *OrderFieldUpdateOne) Mutation() *OrderFieldMutation {
 	return ofuo.mutation
 }
 
-// ClearMenu clears all "menu" edges to type Menu.
+// ClearMenu clears the "menu" edge to type Menu.
 func (ofuo *OrderFieldUpdateOne) ClearMenu() *OrderFieldUpdateOne {
 	ofuo.mutation.ClearMenu()
 	return ofuo
-}
-
-// RemoveMenuIDs removes the menu edge to Menu by ids.
-func (ofuo *OrderFieldUpdateOne) RemoveMenuIDs(ids ...int) *OrderFieldUpdateOne {
-	ofuo.mutation.RemoveMenuIDs(ids...)
-	return ofuo
-}
-
-// RemoveMenu removes menu edges to Menu.
-func (ofuo *OrderFieldUpdateOne) RemoveMenu(m ...*Menu) *OrderFieldUpdateOne {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
-	}
-	return ofuo.RemoveMenuIDs(ids...)
 }
 
 // Save executes the query and returns the updated entity.
@@ -371,6 +318,9 @@ func (ofuo *OrderFieldUpdateOne) check() error {
 			return &ValidationError{Name: "count", err: fmt.Errorf("ent: validator failed for field \"count\": %w", err)}
 		}
 	}
+	if _, ok := ofuo.mutation.MenuID(); ofuo.mutation.MenuCleared() && !ok {
+		return errors.New("ent: clearing a required unique edge \"menu\"")
+	}
 	return nil
 }
 
@@ -406,7 +356,7 @@ func (ofuo *OrderFieldUpdateOne) sqlSave(ctx context.Context) (_node *OrderField
 	}
 	if ofuo.mutation.MenuCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   orderfield.MenuTable,
 			Columns: []string{orderfield.MenuColumn},
@@ -417,31 +367,12 @@ func (ofuo *OrderFieldUpdateOne) sqlSave(ctx context.Context) (_node *OrderField
 					Column: menu.FieldID,
 				},
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ofuo.mutation.RemovedMenuIDs(); len(nodes) > 0 && !ofuo.mutation.MenuCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   orderfield.MenuTable,
-			Columns: []string{orderfield.MenuColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: menu.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := ofuo.mutation.MenuIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   orderfield.MenuTable,
 			Columns: []string{orderfield.MenuColumn},

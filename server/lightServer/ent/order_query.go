@@ -10,6 +10,7 @@ import (
 	"lightServer/ent/order"
 	"lightServer/ent/orderfield"
 	"lightServer/ent/predicate"
+	"lightServer/ent/restaurant"
 	"lightServer/ent/user"
 	"math"
 
@@ -27,8 +28,9 @@ type OrderQuery struct {
 	unique     []string
 	predicates []predicate.Order
 	// eager-loading edges.
-	withItems *OrderFieldQuery
 	withWho   *UserQuery
+	withWhere *RestaurantQuery
+	withItems *OrderFieldQuery
 	withFKs   bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -59,28 +61,6 @@ func (oq *OrderQuery) Order(o ...OrderFunc) *OrderQuery {
 	return oq
 }
 
-// QueryItems chains the current query on the items edge.
-func (oq *OrderQuery) QueryItems() *OrderFieldQuery {
-	query := &OrderFieldQuery{config: oq.config}
-	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := oq.prepareQuery(ctx); err != nil {
-			return nil, err
-		}
-		selector := oq.sqlQuery()
-		if err := selector.Err(); err != nil {
-			return nil, err
-		}
-		step := sqlgraph.NewStep(
-			sqlgraph.From(order.Table, order.FieldID, selector),
-			sqlgraph.To(orderfield.Table, orderfield.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, order.ItemsTable, order.ItemsColumn),
-		)
-		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
-		return fromU, nil
-	}
-	return query
-}
-
 // QueryWho chains the current query on the who edge.
 func (oq *OrderQuery) QueryWho() *UserQuery {
 	query := &UserQuery{config: oq.config}
@@ -96,6 +76,50 @@ func (oq *OrderQuery) QueryWho() *UserQuery {
 			sqlgraph.From(order.Table, order.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, order.WhoTable, order.WhoColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryWhere chains the current query on the where edge.
+func (oq *OrderQuery) QueryWhere() *RestaurantQuery {
+	query := &RestaurantQuery{config: oq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := oq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := oq.sqlQuery()
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(order.Table, order.FieldID, selector),
+			sqlgraph.To(restaurant.Table, restaurant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, order.WhereTable, order.WhereColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryItems chains the current query on the items edge.
+func (oq *OrderQuery) QueryItems() *OrderFieldQuery {
+	query := &OrderFieldQuery{config: oq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := oq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := oq.sqlQuery()
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(order.Table, order.FieldID, selector),
+			sqlgraph.To(orderfield.Table, orderfield.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, order.ItemsTable, order.ItemsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
 		return fromU, nil
@@ -282,17 +306,6 @@ func (oq *OrderQuery) Clone() *OrderQuery {
 	}
 }
 
-//  WithItems tells the query-builder to eager-loads the nodes that are connected to
-// the "items" edge. The optional arguments used to configure the query builder of the edge.
-func (oq *OrderQuery) WithItems(opts ...func(*OrderFieldQuery)) *OrderQuery {
-	query := &OrderFieldQuery{config: oq.config}
-	for _, opt := range opts {
-		opt(query)
-	}
-	oq.withItems = query
-	return oq
-}
-
 //  WithWho tells the query-builder to eager-loads the nodes that are connected to
 // the "who" edge. The optional arguments used to configure the query builder of the edge.
 func (oq *OrderQuery) WithWho(opts ...func(*UserQuery)) *OrderQuery {
@@ -301,6 +314,28 @@ func (oq *OrderQuery) WithWho(opts ...func(*UserQuery)) *OrderQuery {
 		opt(query)
 	}
 	oq.withWho = query
+	return oq
+}
+
+//  WithWhere tells the query-builder to eager-loads the nodes that are connected to
+// the "where" edge. The optional arguments used to configure the query builder of the edge.
+func (oq *OrderQuery) WithWhere(opts ...func(*RestaurantQuery)) *OrderQuery {
+	query := &RestaurantQuery{config: oq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	oq.withWhere = query
+	return oq
+}
+
+//  WithItems tells the query-builder to eager-loads the nodes that are connected to
+// the "items" edge. The optional arguments used to configure the query builder of the edge.
+func (oq *OrderQuery) WithItems(opts ...func(*OrderFieldQuery)) *OrderQuery {
+	query := &OrderFieldQuery{config: oq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	oq.withItems = query
 	return oq
 }
 
@@ -371,12 +406,13 @@ func (oq *OrderQuery) sqlAll(ctx context.Context) ([]*Order, error) {
 		nodes       = []*Order{}
 		withFKs     = oq.withFKs
 		_spec       = oq.querySpec()
-		loadedTypes = [2]bool{
-			oq.withItems != nil,
+		loadedTypes = [3]bool{
 			oq.withWho != nil,
+			oq.withWhere != nil,
+			oq.withItems != nil,
 		}
 	)
-	if oq.withWho != nil {
+	if oq.withWho != nil || oq.withWhere != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -406,6 +442,56 @@ func (oq *OrderQuery) sqlAll(ctx context.Context) ([]*Order, error) {
 		return nodes, nil
 	}
 
+	if query := oq.withWho; query != nil {
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Order)
+		for i := range nodes {
+			if fk := nodes[i].order_who; fk != nil {
+				ids = append(ids, *fk)
+				nodeids[*fk] = append(nodeids[*fk], nodes[i])
+			}
+		}
+		query.Where(user.IDIn(ids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := nodeids[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "order_who" returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Who = n
+			}
+		}
+	}
+
+	if query := oq.withWhere; query != nil {
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Order)
+		for i := range nodes {
+			if fk := nodes[i].order_where; fk != nil {
+				ids = append(ids, *fk)
+				nodeids[*fk] = append(nodeids[*fk], nodes[i])
+			}
+		}
+		query.Where(restaurant.IDIn(ids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := nodeids[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "order_where" returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Where = n
+			}
+		}
+	}
+
 	if query := oq.withItems; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
 		nodeids := make(map[int]*Order)
@@ -431,31 +517,6 @@ func (oq *OrderQuery) sqlAll(ctx context.Context) ([]*Order, error) {
 				return nil, fmt.Errorf(`unexpected foreign-key "order_items" returned %v for node %v`, *fk, n.ID)
 			}
 			node.Edges.Items = append(node.Edges.Items, n)
-		}
-	}
-
-	if query := oq.withWho; query != nil {
-		ids := make([]int, 0, len(nodes))
-		nodeids := make(map[int][]*Order)
-		for i := range nodes {
-			if fk := nodes[i].order_who; fk != nil {
-				ids = append(ids, *fk)
-				nodeids[*fk] = append(nodeids[*fk], nodes[i])
-			}
-		}
-		query.Where(user.IDIn(ids...))
-		neighbors, err := query.All(ctx)
-		if err != nil {
-			return nil, err
-		}
-		for _, n := range neighbors {
-			nodes, ok := nodeids[n.ID]
-			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "order_who" returned %v`, n.ID)
-			}
-			for i := range nodes {
-				nodes[i].Edges.Who = n
-			}
 		}
 	}
 

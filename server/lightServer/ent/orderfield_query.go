@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"errors"
 	"fmt"
 	"lightServer/ent/menu"
@@ -71,7 +70,7 @@ func (ofq *OrderFieldQuery) QueryMenu() *MenuQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(orderfield.Table, orderfield.FieldID, selector),
 			sqlgraph.To(menu.Table, menu.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, orderfield.MenuTable, orderfield.MenuColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, orderfield.MenuTable, orderfield.MenuColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(ofq.driver.Dialect(), step)
 		return fromU, nil
@@ -340,6 +339,9 @@ func (ofq *OrderFieldQuery) sqlAll(ctx context.Context) ([]*OrderField, error) {
 			ofq.withMenu != nil,
 		}
 	)
+	if ofq.withMenu != nil {
+		withFKs = true
+	}
 	if withFKs {
 		_spec.Node.Columns = append(_spec.Node.Columns, orderfield.ForeignKeys...)
 	}
@@ -368,30 +370,27 @@ func (ofq *OrderFieldQuery) sqlAll(ctx context.Context) ([]*OrderField, error) {
 	}
 
 	if query := ofq.withMenu; query != nil {
-		fks := make([]driver.Value, 0, len(nodes))
-		nodeids := make(map[int]*OrderField)
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*OrderField)
 		for i := range nodes {
-			fks = append(fks, nodes[i].ID)
-			nodeids[nodes[i].ID] = nodes[i]
+			if fk := nodes[i].order_field_menu; fk != nil {
+				ids = append(ids, *fk)
+				nodeids[*fk] = append(nodeids[*fk], nodes[i])
+			}
 		}
-		query.withFKs = true
-		query.Where(predicate.Menu(func(s *sql.Selector) {
-			s.Where(sql.InValues(orderfield.MenuColumn, fks...))
-		}))
+		query.Where(menu.IDIn(ids...))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			fk := n.order_field_menu
-			if fk == nil {
-				return nil, fmt.Errorf(`foreign-key "order_field_menu" is nil for node %v`, n.ID)
-			}
-			node, ok := nodeids[*fk]
+			nodes, ok := nodeids[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "order_field_menu" returned %v for node %v`, *fk, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "order_field_menu" returned %v`, n.ID)
 			}
-			node.Edges.Menu = append(node.Edges.Menu, n)
+			for i := range nodes {
+				nodes[i].Edges.Menu = n
+			}
 		}
 	}
 

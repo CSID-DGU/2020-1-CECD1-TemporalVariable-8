@@ -15,7 +15,6 @@ import (
 	"lightServer/ent/restaurant"
 	"lightServer/ent/review"
 	"lightServer/ent/user"
-	"net/url"
 	"sync"
 	"time"
 
@@ -1808,23 +1807,26 @@ func (m *HistoryMutation) ResetEdge(name string) error {
 // nodes in the graph.
 type MenuMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *int
-	name           *string
-	description    *string
-	price          **money.Money
-	clearedFields  map[string]struct{}
-	owner          *int
-	clearedowner   bool
-	images         map[int]struct{}
-	removedimages  map[int]struct{}
-	clearedimages  bool
-	options        map[int]struct{}
-	removedoptions map[int]struct{}
-	clearedoptions bool
-	done           bool
-	oldValue       func(context.Context) (*Menu, error)
+	op              Op
+	typ             string
+	id              *int
+	name            *string
+	description     *string
+	isOption        *bool
+	price           **money.Money
+	clearedFields   map[string]struct{}
+	owner           *int
+	clearedowner    bool
+	category        map[int]struct{}
+	removedcategory map[int]struct{}
+	clearedcategory bool
+	images          *int
+	clearedimages   bool
+	options         map[int]struct{}
+	removedoptions  map[int]struct{}
+	clearedoptions  bool
+	done            bool
+	oldValue        func(context.Context) (*Menu, error)
 }
 
 var _ ent.Mutation = (*MenuMutation)(nil)
@@ -1980,6 +1982,43 @@ func (m *MenuMutation) ResetDescription() {
 	m.description = nil
 }
 
+// SetIsOption sets the isOption field.
+func (m *MenuMutation) SetIsOption(b bool) {
+	m.isOption = &b
+}
+
+// IsOption returns the isOption value in the mutation.
+func (m *MenuMutation) IsOption() (r bool, exists bool) {
+	v := m.isOption
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIsOption returns the old isOption value of the Menu.
+// If the Menu object wasn't provided to the builder, the object is fetched
+// from the database.
+// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+func (m *MenuMutation) OldIsOption(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldIsOption is allowed only on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldIsOption requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIsOption: %w", err)
+	}
+	return oldValue.IsOption, nil
+}
+
+// ResetIsOption reset all changes of the "isOption" field.
+func (m *MenuMutation) ResetIsOption() {
+	m.isOption = nil
+}
+
 // SetPrice sets the price field.
 func (m *MenuMutation) SetPrice(value *money.Money) {
 	m.price = &value
@@ -2069,14 +2108,62 @@ func (m *MenuMutation) ResetOwner() {
 	m.clearedowner = false
 }
 
-// AddImageIDs adds the images edge to File by ids.
-func (m *MenuMutation) AddImageIDs(ids ...int) {
-	if m.images == nil {
-		m.images = make(map[int]struct{})
+// AddCategoryIDs adds the category edge to Category by ids.
+func (m *MenuMutation) AddCategoryIDs(ids ...int) {
+	if m.category == nil {
+		m.category = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.images[ids[i]] = struct{}{}
+		m.category[ids[i]] = struct{}{}
 	}
+}
+
+// ClearCategory clears the category edge to Category.
+func (m *MenuMutation) ClearCategory() {
+	m.clearedcategory = true
+}
+
+// CategoryCleared returns if the edge category was cleared.
+func (m *MenuMutation) CategoryCleared() bool {
+	return m.clearedcategory
+}
+
+// RemoveCategoryIDs removes the category edge to Category by ids.
+func (m *MenuMutation) RemoveCategoryIDs(ids ...int) {
+	if m.removedcategory == nil {
+		m.removedcategory = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.removedcategory[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCategory returns the removed ids of category.
+func (m *MenuMutation) RemovedCategoryIDs() (ids []int) {
+	for id := range m.removedcategory {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CategoryIDs returns the category ids in the mutation.
+func (m *MenuMutation) CategoryIDs() (ids []int) {
+	for id := range m.category {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCategory reset all changes of the "category" edge.
+func (m *MenuMutation) ResetCategory() {
+	m.category = nil
+	m.clearedcategory = false
+	m.removedcategory = nil
+}
+
+// SetImagesID sets the images edge to File by id.
+func (m *MenuMutation) SetImagesID(id int) {
+	m.images = &id
 }
 
 // ClearImages clears the images edge to File.
@@ -2089,28 +2176,20 @@ func (m *MenuMutation) ImagesCleared() bool {
 	return m.clearedimages
 }
 
-// RemoveImageIDs removes the images edge to File by ids.
-func (m *MenuMutation) RemoveImageIDs(ids ...int) {
-	if m.removedimages == nil {
-		m.removedimages = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.removedimages[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedImages returns the removed ids of images.
-func (m *MenuMutation) RemovedImagesIDs() (ids []int) {
-	for id := range m.removedimages {
-		ids = append(ids, id)
+// ImagesID returns the images id in the mutation.
+func (m *MenuMutation) ImagesID() (id int, exists bool) {
+	if m.images != nil {
+		return *m.images, true
 	}
 	return
 }
 
 // ImagesIDs returns the images ids in the mutation.
+// Note that ids always returns len(ids) <= 1 for unique edges, and you should use
+// ImagesID instead. It exists only for internal usage by the builders.
 func (m *MenuMutation) ImagesIDs() (ids []int) {
-	for id := range m.images {
-		ids = append(ids, id)
+	if id := m.images; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -2119,7 +2198,6 @@ func (m *MenuMutation) ImagesIDs() (ids []int) {
 func (m *MenuMutation) ResetImages() {
 	m.images = nil
 	m.clearedimages = false
-	m.removedimages = nil
 }
 
 // AddOptionIDs adds the options edge to Menu by ids.
@@ -2189,12 +2267,15 @@ func (m *MenuMutation) Type() string {
 // this mutation. Note that, in order to get all numeric
 // fields that were in/decremented, call AddedFields().
 func (m *MenuMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 4)
 	if m.name != nil {
 		fields = append(fields, menu.FieldName)
 	}
 	if m.description != nil {
 		fields = append(fields, menu.FieldDescription)
+	}
+	if m.isOption != nil {
+		fields = append(fields, menu.FieldIsOption)
 	}
 	if m.price != nil {
 		fields = append(fields, menu.FieldPrice)
@@ -2211,6 +2292,8 @@ func (m *MenuMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case menu.FieldDescription:
 		return m.Description()
+	case menu.FieldIsOption:
+		return m.IsOption()
 	case menu.FieldPrice:
 		return m.Price()
 	}
@@ -2226,6 +2309,8 @@ func (m *MenuMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldName(ctx)
 	case menu.FieldDescription:
 		return m.OldDescription(ctx)
+	case menu.FieldIsOption:
+		return m.OldIsOption(ctx)
 	case menu.FieldPrice:
 		return m.OldPrice(ctx)
 	}
@@ -2250,6 +2335,13 @@ func (m *MenuMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDescription(v)
+		return nil
+	case menu.FieldIsOption:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIsOption(v)
 		return nil
 	case menu.FieldPrice:
 		v, ok := value.(*money.Money)
@@ -2323,6 +2415,9 @@ func (m *MenuMutation) ResetField(name string) error {
 	case menu.FieldDescription:
 		m.ResetDescription()
 		return nil
+	case menu.FieldIsOption:
+		m.ResetIsOption()
+		return nil
 	case menu.FieldPrice:
 		m.ResetPrice()
 		return nil
@@ -2333,9 +2428,12 @@ func (m *MenuMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this
 // mutation.
 func (m *MenuMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.owner != nil {
 		edges = append(edges, menu.EdgeOwner)
+	}
+	if m.category != nil {
+		edges = append(edges, menu.EdgeCategory)
 	}
 	if m.images != nil {
 		edges = append(edges, menu.EdgeImages)
@@ -2354,12 +2452,16 @@ func (m *MenuMutation) AddedIDs(name string) []ent.Value {
 		if id := m.owner; id != nil {
 			return []ent.Value{*id}
 		}
-	case menu.EdgeImages:
-		ids := make([]ent.Value, 0, len(m.images))
-		for id := range m.images {
+	case menu.EdgeCategory:
+		ids := make([]ent.Value, 0, len(m.category))
+		for id := range m.category {
 			ids = append(ids, id)
 		}
 		return ids
+	case menu.EdgeImages:
+		if id := m.images; id != nil {
+			return []ent.Value{*id}
+		}
 	case menu.EdgeOptions:
 		ids := make([]ent.Value, 0, len(m.options))
 		for id := range m.options {
@@ -2373,9 +2475,9 @@ func (m *MenuMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this
 // mutation.
 func (m *MenuMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
-	if m.removedimages != nil {
-		edges = append(edges, menu.EdgeImages)
+	edges := make([]string, 0, 4)
+	if m.removedcategory != nil {
+		edges = append(edges, menu.EdgeCategory)
 	}
 	if m.removedoptions != nil {
 		edges = append(edges, menu.EdgeOptions)
@@ -2387,9 +2489,9 @@ func (m *MenuMutation) RemovedEdges() []string {
 // the given edge name.
 func (m *MenuMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case menu.EdgeImages:
-		ids := make([]ent.Value, 0, len(m.removedimages))
-		for id := range m.removedimages {
+	case menu.EdgeCategory:
+		ids := make([]ent.Value, 0, len(m.removedcategory))
+		for id := range m.removedcategory {
 			ids = append(ids, id)
 		}
 		return ids
@@ -2406,9 +2508,12 @@ func (m *MenuMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this
 // mutation.
 func (m *MenuMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedowner {
 		edges = append(edges, menu.EdgeOwner)
+	}
+	if m.clearedcategory {
+		edges = append(edges, menu.EdgeCategory)
 	}
 	if m.clearedimages {
 		edges = append(edges, menu.EdgeImages)
@@ -2425,6 +2530,8 @@ func (m *MenuMutation) EdgeCleared(name string) bool {
 	switch name {
 	case menu.EdgeOwner:
 		return m.clearedowner
+	case menu.EdgeCategory:
+		return m.clearedcategory
 	case menu.EdgeImages:
 		return m.clearedimages
 	case menu.EdgeOptions:
@@ -2440,6 +2547,9 @@ func (m *MenuMutation) ClearEdge(name string) error {
 	case menu.EdgeOwner:
 		m.ClearOwner()
 		return nil
+	case menu.EdgeImages:
+		m.ClearImages()
+		return nil
 	}
 	return fmt.Errorf("unknown Menu unique edge %s", name)
 }
@@ -2451,6 +2561,9 @@ func (m *MenuMutation) ResetEdge(name string) error {
 	switch name {
 	case menu.EdgeOwner:
 		m.ResetOwner()
+		return nil
+	case menu.EdgeCategory:
+		m.ResetCategory()
 		return nil
 	case menu.EdgeImages:
 		m.ResetImages()
@@ -2470,14 +2583,17 @@ type OrderMutation struct {
 	typ           string
 	id            *int
 	order_at      *time.Time
-	delivery_at   *time.Time
-	arrive_at     *time.Time
+	cooking_at    *time.Time
+	deliver_at    *time.Time
+	complete_at   *time.Time
 	clearedFields map[string]struct{}
+	who           *int
+	clearedwho    bool
+	where         *int
+	clearedwhere  bool
 	items         map[int]struct{}
 	removeditems  map[int]struct{}
 	cleareditems  bool
-	who           *int
-	clearedwho    bool
 	done          bool
 	oldValue      func(context.Context) (*Order, error)
 }
@@ -2598,78 +2714,232 @@ func (m *OrderMutation) ResetOrderAt() {
 	m.order_at = nil
 }
 
-// SetDeliveryAt sets the delivery_at field.
-func (m *OrderMutation) SetDeliveryAt(t time.Time) {
-	m.delivery_at = &t
+// SetCookingAt sets the cooking_at field.
+func (m *OrderMutation) SetCookingAt(t time.Time) {
+	m.cooking_at = &t
 }
 
-// DeliveryAt returns the delivery_at value in the mutation.
-func (m *OrderMutation) DeliveryAt() (r time.Time, exists bool) {
-	v := m.delivery_at
+// CookingAt returns the cooking_at value in the mutation.
+func (m *OrderMutation) CookingAt() (r time.Time, exists bool) {
+	v := m.cooking_at
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldDeliveryAt returns the old delivery_at value of the Order.
+// OldCookingAt returns the old cooking_at value of the Order.
 // If the Order object wasn't provided to the builder, the object is fetched
 // from the database.
 // An error is returned if the mutation operation is not UpdateOne, or database query fails.
-func (m *OrderMutation) OldDeliveryAt(ctx context.Context) (v time.Time, err error) {
+func (m *OrderMutation) OldCookingAt(ctx context.Context) (v *time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldDeliveryAt is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldCookingAt is allowed only on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldDeliveryAt requires an ID field in the mutation")
+		return v, fmt.Errorf("OldCookingAt requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDeliveryAt: %w", err)
+		return v, fmt.Errorf("querying old value for OldCookingAt: %w", err)
 	}
-	return oldValue.DeliveryAt, nil
+	return oldValue.CookingAt, nil
 }
 
-// ResetDeliveryAt reset all changes of the "delivery_at" field.
-func (m *OrderMutation) ResetDeliveryAt() {
-	m.delivery_at = nil
+// ClearCookingAt clears the value of cooking_at.
+func (m *OrderMutation) ClearCookingAt() {
+	m.cooking_at = nil
+	m.clearedFields[order.FieldCookingAt] = struct{}{}
 }
 
-// SetArriveAt sets the arrive_at field.
-func (m *OrderMutation) SetArriveAt(t time.Time) {
-	m.arrive_at = &t
+// CookingAtCleared returns if the field cooking_at was cleared in this mutation.
+func (m *OrderMutation) CookingAtCleared() bool {
+	_, ok := m.clearedFields[order.FieldCookingAt]
+	return ok
 }
 
-// ArriveAt returns the arrive_at value in the mutation.
-func (m *OrderMutation) ArriveAt() (r time.Time, exists bool) {
-	v := m.arrive_at
+// ResetCookingAt reset all changes of the "cooking_at" field.
+func (m *OrderMutation) ResetCookingAt() {
+	m.cooking_at = nil
+	delete(m.clearedFields, order.FieldCookingAt)
+}
+
+// SetDeliverAt sets the deliver_at field.
+func (m *OrderMutation) SetDeliverAt(t time.Time) {
+	m.deliver_at = &t
+}
+
+// DeliverAt returns the deliver_at value in the mutation.
+func (m *OrderMutation) DeliverAt() (r time.Time, exists bool) {
+	v := m.deliver_at
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldArriveAt returns the old arrive_at value of the Order.
+// OldDeliverAt returns the old deliver_at value of the Order.
 // If the Order object wasn't provided to the builder, the object is fetched
 // from the database.
 // An error is returned if the mutation operation is not UpdateOne, or database query fails.
-func (m *OrderMutation) OldArriveAt(ctx context.Context) (v time.Time, err error) {
+func (m *OrderMutation) OldDeliverAt(ctx context.Context) (v *time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldArriveAt is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldDeliverAt is allowed only on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldArriveAt requires an ID field in the mutation")
+		return v, fmt.Errorf("OldDeliverAt requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldArriveAt: %w", err)
+		return v, fmt.Errorf("querying old value for OldDeliverAt: %w", err)
 	}
-	return oldValue.ArriveAt, nil
+	return oldValue.DeliverAt, nil
 }
 
-// ResetArriveAt reset all changes of the "arrive_at" field.
-func (m *OrderMutation) ResetArriveAt() {
-	m.arrive_at = nil
+// ClearDeliverAt clears the value of deliver_at.
+func (m *OrderMutation) ClearDeliverAt() {
+	m.deliver_at = nil
+	m.clearedFields[order.FieldDeliverAt] = struct{}{}
+}
+
+// DeliverAtCleared returns if the field deliver_at was cleared in this mutation.
+func (m *OrderMutation) DeliverAtCleared() bool {
+	_, ok := m.clearedFields[order.FieldDeliverAt]
+	return ok
+}
+
+// ResetDeliverAt reset all changes of the "deliver_at" field.
+func (m *OrderMutation) ResetDeliverAt() {
+	m.deliver_at = nil
+	delete(m.clearedFields, order.FieldDeliverAt)
+}
+
+// SetCompleteAt sets the complete_at field.
+func (m *OrderMutation) SetCompleteAt(t time.Time) {
+	m.complete_at = &t
+}
+
+// CompleteAt returns the complete_at value in the mutation.
+func (m *OrderMutation) CompleteAt() (r time.Time, exists bool) {
+	v := m.complete_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCompleteAt returns the old complete_at value of the Order.
+// If the Order object wasn't provided to the builder, the object is fetched
+// from the database.
+// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+func (m *OrderMutation) OldCompleteAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldCompleteAt is allowed only on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldCompleteAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCompleteAt: %w", err)
+	}
+	return oldValue.CompleteAt, nil
+}
+
+// ClearCompleteAt clears the value of complete_at.
+func (m *OrderMutation) ClearCompleteAt() {
+	m.complete_at = nil
+	m.clearedFields[order.FieldCompleteAt] = struct{}{}
+}
+
+// CompleteAtCleared returns if the field complete_at was cleared in this mutation.
+func (m *OrderMutation) CompleteAtCleared() bool {
+	_, ok := m.clearedFields[order.FieldCompleteAt]
+	return ok
+}
+
+// ResetCompleteAt reset all changes of the "complete_at" field.
+func (m *OrderMutation) ResetCompleteAt() {
+	m.complete_at = nil
+	delete(m.clearedFields, order.FieldCompleteAt)
+}
+
+// SetWhoID sets the who edge to User by id.
+func (m *OrderMutation) SetWhoID(id int) {
+	m.who = &id
+}
+
+// ClearWho clears the who edge to User.
+func (m *OrderMutation) ClearWho() {
+	m.clearedwho = true
+}
+
+// WhoCleared returns if the edge who was cleared.
+func (m *OrderMutation) WhoCleared() bool {
+	return m.clearedwho
+}
+
+// WhoID returns the who id in the mutation.
+func (m *OrderMutation) WhoID() (id int, exists bool) {
+	if m.who != nil {
+		return *m.who, true
+	}
+	return
+}
+
+// WhoIDs returns the who ids in the mutation.
+// Note that ids always returns len(ids) <= 1 for unique edges, and you should use
+// WhoID instead. It exists only for internal usage by the builders.
+func (m *OrderMutation) WhoIDs() (ids []int) {
+	if id := m.who; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetWho reset all changes of the "who" edge.
+func (m *OrderMutation) ResetWho() {
+	m.who = nil
+	m.clearedwho = false
+}
+
+// SetWhereID sets the where edge to Restaurant by id.
+func (m *OrderMutation) SetWhereID(id int) {
+	m.where = &id
+}
+
+// ClearWhere clears the where edge to Restaurant.
+func (m *OrderMutation) ClearWhere() {
+	m.clearedwhere = true
+}
+
+// WhereCleared returns if the edge where was cleared.
+func (m *OrderMutation) WhereCleared() bool {
+	return m.clearedwhere
+}
+
+// WhereID returns the where id in the mutation.
+func (m *OrderMutation) WhereID() (id int, exists bool) {
+	if m.where != nil {
+		return *m.where, true
+	}
+	return
+}
+
+// WhereIDs returns the where ids in the mutation.
+// Note that ids always returns len(ids) <= 1 for unique edges, and you should use
+// WhereID instead. It exists only for internal usage by the builders.
+func (m *OrderMutation) WhereIDs() (ids []int) {
+	if id := m.where; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetWhere reset all changes of the "where" edge.
+func (m *OrderMutation) ResetWhere() {
+	m.where = nil
+	m.clearedwhere = false
 }
 
 // AddItemIDs adds the items edge to OrderField by ids.
@@ -2725,45 +2995,6 @@ func (m *OrderMutation) ResetItems() {
 	m.removeditems = nil
 }
 
-// SetWhoID sets the who edge to User by id.
-func (m *OrderMutation) SetWhoID(id int) {
-	m.who = &id
-}
-
-// ClearWho clears the who edge to User.
-func (m *OrderMutation) ClearWho() {
-	m.clearedwho = true
-}
-
-// WhoCleared returns if the edge who was cleared.
-func (m *OrderMutation) WhoCleared() bool {
-	return m.clearedwho
-}
-
-// WhoID returns the who id in the mutation.
-func (m *OrderMutation) WhoID() (id int, exists bool) {
-	if m.who != nil {
-		return *m.who, true
-	}
-	return
-}
-
-// WhoIDs returns the who ids in the mutation.
-// Note that ids always returns len(ids) <= 1 for unique edges, and you should use
-// WhoID instead. It exists only for internal usage by the builders.
-func (m *OrderMutation) WhoIDs() (ids []int) {
-	if id := m.who; id != nil {
-		ids = append(ids, *id)
-	}
-	return
-}
-
-// ResetWho reset all changes of the "who" edge.
-func (m *OrderMutation) ResetWho() {
-	m.who = nil
-	m.clearedwho = false
-}
-
 // Op returns the operation name.
 func (m *OrderMutation) Op() Op {
 	return m.op
@@ -2778,15 +3009,18 @@ func (m *OrderMutation) Type() string {
 // this mutation. Note that, in order to get all numeric
 // fields that were in/decremented, call AddedFields().
 func (m *OrderMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 4)
 	if m.order_at != nil {
 		fields = append(fields, order.FieldOrderAt)
 	}
-	if m.delivery_at != nil {
-		fields = append(fields, order.FieldDeliveryAt)
+	if m.cooking_at != nil {
+		fields = append(fields, order.FieldCookingAt)
 	}
-	if m.arrive_at != nil {
-		fields = append(fields, order.FieldArriveAt)
+	if m.deliver_at != nil {
+		fields = append(fields, order.FieldDeliverAt)
+	}
+	if m.complete_at != nil {
+		fields = append(fields, order.FieldCompleteAt)
 	}
 	return fields
 }
@@ -2798,10 +3032,12 @@ func (m *OrderMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case order.FieldOrderAt:
 		return m.OrderAt()
-	case order.FieldDeliveryAt:
-		return m.DeliveryAt()
-	case order.FieldArriveAt:
-		return m.ArriveAt()
+	case order.FieldCookingAt:
+		return m.CookingAt()
+	case order.FieldDeliverAt:
+		return m.DeliverAt()
+	case order.FieldCompleteAt:
+		return m.CompleteAt()
 	}
 	return nil, false
 }
@@ -2813,10 +3049,12 @@ func (m *OrderMutation) OldField(ctx context.Context, name string) (ent.Value, e
 	switch name {
 	case order.FieldOrderAt:
 		return m.OldOrderAt(ctx)
-	case order.FieldDeliveryAt:
-		return m.OldDeliveryAt(ctx)
-	case order.FieldArriveAt:
-		return m.OldArriveAt(ctx)
+	case order.FieldCookingAt:
+		return m.OldCookingAt(ctx)
+	case order.FieldDeliverAt:
+		return m.OldDeliverAt(ctx)
+	case order.FieldCompleteAt:
+		return m.OldCompleteAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown Order field %s", name)
 }
@@ -2833,19 +3071,26 @@ func (m *OrderMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetOrderAt(v)
 		return nil
-	case order.FieldDeliveryAt:
+	case order.FieldCookingAt:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetDeliveryAt(v)
+		m.SetCookingAt(v)
 		return nil
-	case order.FieldArriveAt:
+	case order.FieldDeliverAt:
 		v, ok := value.(time.Time)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetArriveAt(v)
+		m.SetDeliverAt(v)
+		return nil
+	case order.FieldCompleteAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCompleteAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Order field %s", name)
@@ -2876,7 +3121,17 @@ func (m *OrderMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared
 // during this mutation.
 func (m *OrderMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(order.FieldCookingAt) {
+		fields = append(fields, order.FieldCookingAt)
+	}
+	if m.FieldCleared(order.FieldDeliverAt) {
+		fields = append(fields, order.FieldDeliverAt)
+	}
+	if m.FieldCleared(order.FieldCompleteAt) {
+		fields = append(fields, order.FieldCompleteAt)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicates if this field was
@@ -2889,6 +3144,17 @@ func (m *OrderMutation) FieldCleared(name string) bool {
 // ClearField clears the value for the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *OrderMutation) ClearField(name string) error {
+	switch name {
+	case order.FieldCookingAt:
+		m.ClearCookingAt()
+		return nil
+	case order.FieldDeliverAt:
+		m.ClearDeliverAt()
+		return nil
+	case order.FieldCompleteAt:
+		m.ClearCompleteAt()
+		return nil
+	}
 	return fmt.Errorf("unknown Order nullable field %s", name)
 }
 
@@ -2900,11 +3166,14 @@ func (m *OrderMutation) ResetField(name string) error {
 	case order.FieldOrderAt:
 		m.ResetOrderAt()
 		return nil
-	case order.FieldDeliveryAt:
-		m.ResetDeliveryAt()
+	case order.FieldCookingAt:
+		m.ResetCookingAt()
 		return nil
-	case order.FieldArriveAt:
-		m.ResetArriveAt()
+	case order.FieldDeliverAt:
+		m.ResetDeliverAt()
+		return nil
+	case order.FieldCompleteAt:
+		m.ResetCompleteAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Order field %s", name)
@@ -2913,12 +3182,15 @@ func (m *OrderMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this
 // mutation.
 func (m *OrderMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
-	if m.items != nil {
-		edges = append(edges, order.EdgeItems)
-	}
+	edges := make([]string, 0, 3)
 	if m.who != nil {
 		edges = append(edges, order.EdgeWho)
+	}
+	if m.where != nil {
+		edges = append(edges, order.EdgeWhere)
+	}
+	if m.items != nil {
+		edges = append(edges, order.EdgeItems)
 	}
 	return edges
 }
@@ -2927,16 +3199,20 @@ func (m *OrderMutation) AddedEdges() []string {
 // the given edge name.
 func (m *OrderMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case order.EdgeWho:
+		if id := m.who; id != nil {
+			return []ent.Value{*id}
+		}
+	case order.EdgeWhere:
+		if id := m.where; id != nil {
+			return []ent.Value{*id}
+		}
 	case order.EdgeItems:
 		ids := make([]ent.Value, 0, len(m.items))
 		for id := range m.items {
 			ids = append(ids, id)
 		}
 		return ids
-	case order.EdgeWho:
-		if id := m.who; id != nil {
-			return []ent.Value{*id}
-		}
 	}
 	return nil
 }
@@ -2944,7 +3220,7 @@ func (m *OrderMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this
 // mutation.
 func (m *OrderMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removeditems != nil {
 		edges = append(edges, order.EdgeItems)
 	}
@@ -2968,12 +3244,15 @@ func (m *OrderMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this
 // mutation.
 func (m *OrderMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
-	if m.cleareditems {
-		edges = append(edges, order.EdgeItems)
-	}
+	edges := make([]string, 0, 3)
 	if m.clearedwho {
 		edges = append(edges, order.EdgeWho)
+	}
+	if m.clearedwhere {
+		edges = append(edges, order.EdgeWhere)
+	}
+	if m.cleareditems {
+		edges = append(edges, order.EdgeItems)
 	}
 	return edges
 }
@@ -2982,10 +3261,12 @@ func (m *OrderMutation) ClearedEdges() []string {
 // cleared in this mutation.
 func (m *OrderMutation) EdgeCleared(name string) bool {
 	switch name {
-	case order.EdgeItems:
-		return m.cleareditems
 	case order.EdgeWho:
 		return m.clearedwho
+	case order.EdgeWhere:
+		return m.clearedwhere
+	case order.EdgeItems:
+		return m.cleareditems
 	}
 	return false
 }
@@ -2997,6 +3278,9 @@ func (m *OrderMutation) ClearEdge(name string) error {
 	case order.EdgeWho:
 		m.ClearWho()
 		return nil
+	case order.EdgeWhere:
+		m.ClearWhere()
+		return nil
 	}
 	return fmt.Errorf("unknown Order unique edge %s", name)
 }
@@ -3006,11 +3290,14 @@ func (m *OrderMutation) ClearEdge(name string) error {
 // defined in the schema.
 func (m *OrderMutation) ResetEdge(name string) error {
 	switch name {
-	case order.EdgeItems:
-		m.ResetItems()
-		return nil
 	case order.EdgeWho:
 		m.ResetWho()
+		return nil
+	case order.EdgeWhere:
+		m.ResetWhere()
+		return nil
+	case order.EdgeItems:
+		m.ResetItems()
 		return nil
 	}
 	return fmt.Errorf("unknown Order edge %s", name)
@@ -3026,8 +3313,7 @@ type OrderFieldMutation struct {
 	count         *uint16
 	addcount      *uint16
 	clearedFields map[string]struct{}
-	menu          map[int]struct{}
-	removedmenu   map[int]struct{}
+	menu          *int
 	clearedmenu   bool
 	done          bool
 	oldValue      func(context.Context) (*OrderField, error)
@@ -3169,14 +3455,9 @@ func (m *OrderFieldMutation) ResetCount() {
 	m.addcount = nil
 }
 
-// AddMenuIDs adds the menu edge to Menu by ids.
-func (m *OrderFieldMutation) AddMenuIDs(ids ...int) {
-	if m.menu == nil {
-		m.menu = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.menu[ids[i]] = struct{}{}
-	}
+// SetMenuID sets the menu edge to Menu by id.
+func (m *OrderFieldMutation) SetMenuID(id int) {
+	m.menu = &id
 }
 
 // ClearMenu clears the menu edge to Menu.
@@ -3189,28 +3470,20 @@ func (m *OrderFieldMutation) MenuCleared() bool {
 	return m.clearedmenu
 }
 
-// RemoveMenuIDs removes the menu edge to Menu by ids.
-func (m *OrderFieldMutation) RemoveMenuIDs(ids ...int) {
-	if m.removedmenu == nil {
-		m.removedmenu = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.removedmenu[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedMenu returns the removed ids of menu.
-func (m *OrderFieldMutation) RemovedMenuIDs() (ids []int) {
-	for id := range m.removedmenu {
-		ids = append(ids, id)
+// MenuID returns the menu id in the mutation.
+func (m *OrderFieldMutation) MenuID() (id int, exists bool) {
+	if m.menu != nil {
+		return *m.menu, true
 	}
 	return
 }
 
 // MenuIDs returns the menu ids in the mutation.
+// Note that ids always returns len(ids) <= 1 for unique edges, and you should use
+// MenuID instead. It exists only for internal usage by the builders.
 func (m *OrderFieldMutation) MenuIDs() (ids []int) {
-	for id := range m.menu {
-		ids = append(ids, id)
+	if id := m.menu; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -3219,7 +3492,6 @@ func (m *OrderFieldMutation) MenuIDs() (ids []int) {
 func (m *OrderFieldMutation) ResetMenu() {
 	m.menu = nil
 	m.clearedmenu = false
-	m.removedmenu = nil
 }
 
 // Op returns the operation name.
@@ -3364,11 +3636,9 @@ func (m *OrderFieldMutation) AddedEdges() []string {
 func (m *OrderFieldMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case orderfield.EdgeMenu:
-		ids := make([]ent.Value, 0, len(m.menu))
-		for id := range m.menu {
-			ids = append(ids, id)
+		if id := m.menu; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	}
 	return nil
 }
@@ -3377,9 +3647,6 @@ func (m *OrderFieldMutation) AddedIDs(name string) []ent.Value {
 // mutation.
 func (m *OrderFieldMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.removedmenu != nil {
-		edges = append(edges, orderfield.EdgeMenu)
-	}
 	return edges
 }
 
@@ -3387,12 +3654,6 @@ func (m *OrderFieldMutation) RemovedEdges() []string {
 // the given edge name.
 func (m *OrderFieldMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case orderfield.EdgeMenu:
-		ids := make([]ent.Value, 0, len(m.removedmenu))
-		for id := range m.removedmenu {
-			ids = append(ids, id)
-		}
-		return ids
 	}
 	return nil
 }
@@ -3421,6 +3682,9 @@ func (m *OrderFieldMutation) EdgeCleared(name string) bool {
 // error if the edge name is not defined in the schema.
 func (m *OrderFieldMutation) ClearEdge(name string) error {
 	switch name {
+	case orderfield.EdgeMenu:
+		m.ClearMenu()
+		return nil
 	}
 	return fmt.Errorf("unknown OrderField unique edge %s", name)
 }
@@ -3441,30 +3705,38 @@ func (m *OrderFieldMutation) ResetEdge(name string) error {
 // nodes in the graph.
 type RestaurantMutation struct {
 	config
-	op               Op
-	typ              string
-	id               *int
-	name             *string
-	sub_name         *string
-	uri              **url.URL
-	clearedFields    map[string]struct{}
-	avatar           *int
-	clearedavatar    bool
-	root             *int
-	clearedroot      bool
-	children         map[int]struct{}
-	removedchildren  map[int]struct{}
-	clearedchildren  bool
-	parent           *int
-	clearedparent    bool
-	histories        map[int]struct{}
-	removedhistories map[int]struct{}
-	clearedhistories bool
-	menus            map[int]struct{}
-	removedmenus     map[int]struct{}
-	clearedmenus     bool
-	done             bool
-	oldValue         func(context.Context) (*Restaurant, error)
+	op                Op
+	typ               string
+	id                *int
+	name              *string
+	description       *string
+	uri               *string
+	clearedFields     map[string]struct{}
+	owner             *int
+	clearedowner      bool
+	avatar            *int
+	clearedavatar     bool
+	root              *int
+	clearedroot       bool
+	children          map[int]struct{}
+	removedchildren   map[int]struct{}
+	clearedchildren   bool
+	parent            *int
+	clearedparent     bool
+	histories         map[int]struct{}
+	removedhistories  map[int]struct{}
+	clearedhistories  bool
+	categories        map[int]struct{}
+	removedcategories map[int]struct{}
+	clearedcategories bool
+	orders            map[int]struct{}
+	removedorders     map[int]struct{}
+	clearedorders     bool
+	menus             map[int]struct{}
+	removedmenus      map[int]struct{}
+	clearedmenus      bool
+	done              bool
+	oldValue          func(context.Context) (*Restaurant, error)
 }
 
 var _ ent.Mutation = (*RestaurantMutation)(nil)
@@ -3583,63 +3855,63 @@ func (m *RestaurantMutation) ResetName() {
 	m.name = nil
 }
 
-// SetSubName sets the sub_name field.
-func (m *RestaurantMutation) SetSubName(s string) {
-	m.sub_name = &s
+// SetDescription sets the description field.
+func (m *RestaurantMutation) SetDescription(s string) {
+	m.description = &s
 }
 
-// SubName returns the sub_name value in the mutation.
-func (m *RestaurantMutation) SubName() (r string, exists bool) {
-	v := m.sub_name
+// Description returns the description value in the mutation.
+func (m *RestaurantMutation) Description() (r string, exists bool) {
+	v := m.description
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldSubName returns the old sub_name value of the Restaurant.
+// OldDescription returns the old description value of the Restaurant.
 // If the Restaurant object wasn't provided to the builder, the object is fetched
 // from the database.
 // An error is returned if the mutation operation is not UpdateOne, or database query fails.
-func (m *RestaurantMutation) OldSubName(ctx context.Context) (v string, err error) {
+func (m *RestaurantMutation) OldDescription(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldSubName is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldDescription is allowed only on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldSubName requires an ID field in the mutation")
+		return v, fmt.Errorf("OldDescription requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSubName: %w", err)
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
 	}
-	return oldValue.SubName, nil
+	return oldValue.Description, nil
 }
 
-// ClearSubName clears the value of sub_name.
-func (m *RestaurantMutation) ClearSubName() {
-	m.sub_name = nil
-	m.clearedFields[restaurant.FieldSubName] = struct{}{}
+// ClearDescription clears the value of description.
+func (m *RestaurantMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[restaurant.FieldDescription] = struct{}{}
 }
 
-// SubNameCleared returns if the field sub_name was cleared in this mutation.
-func (m *RestaurantMutation) SubNameCleared() bool {
-	_, ok := m.clearedFields[restaurant.FieldSubName]
+// DescriptionCleared returns if the field description was cleared in this mutation.
+func (m *RestaurantMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[restaurant.FieldDescription]
 	return ok
 }
 
-// ResetSubName reset all changes of the "sub_name" field.
-func (m *RestaurantMutation) ResetSubName() {
-	m.sub_name = nil
-	delete(m.clearedFields, restaurant.FieldSubName)
+// ResetDescription reset all changes of the "description" field.
+func (m *RestaurantMutation) ResetDescription() {
+	m.description = nil
+	delete(m.clearedFields, restaurant.FieldDescription)
 }
 
 // SetURI sets the uri field.
-func (m *RestaurantMutation) SetURI(u *url.URL) {
-	m.uri = &u
+func (m *RestaurantMutation) SetURI(s string) {
+	m.uri = &s
 }
 
 // URI returns the uri value in the mutation.
-func (m *RestaurantMutation) URI() (r *url.URL, exists bool) {
+func (m *RestaurantMutation) URI() (r string, exists bool) {
 	v := m.uri
 	if v == nil {
 		return
@@ -3651,7 +3923,7 @@ func (m *RestaurantMutation) URI() (r *url.URL, exists bool) {
 // If the Restaurant object wasn't provided to the builder, the object is fetched
 // from the database.
 // An error is returned if the mutation operation is not UpdateOne, or database query fails.
-func (m *RestaurantMutation) OldURI(ctx context.Context) (v *url.URL, err error) {
+func (m *RestaurantMutation) OldURI(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, fmt.Errorf("OldURI is allowed only on UpdateOne operations")
 	}
@@ -3681,6 +3953,45 @@ func (m *RestaurantMutation) URICleared() bool {
 func (m *RestaurantMutation) ResetURI() {
 	m.uri = nil
 	delete(m.clearedFields, restaurant.FieldURI)
+}
+
+// SetOwnerID sets the owner edge to User by id.
+func (m *RestaurantMutation) SetOwnerID(id int) {
+	m.owner = &id
+}
+
+// ClearOwner clears the owner edge to User.
+func (m *RestaurantMutation) ClearOwner() {
+	m.clearedowner = true
+}
+
+// OwnerCleared returns if the edge owner was cleared.
+func (m *RestaurantMutation) OwnerCleared() bool {
+	return m.clearedowner
+}
+
+// OwnerID returns the owner id in the mutation.
+func (m *RestaurantMutation) OwnerID() (id int, exists bool) {
+	if m.owner != nil {
+		return *m.owner, true
+	}
+	return
+}
+
+// OwnerIDs returns the owner ids in the mutation.
+// Note that ids always returns len(ids) <= 1 for unique edges, and you should use
+// OwnerID instead. It exists only for internal usage by the builders.
+func (m *RestaurantMutation) OwnerIDs() (ids []int) {
+	if id := m.owner; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetOwner reset all changes of the "owner" edge.
+func (m *RestaurantMutation) ResetOwner() {
+	m.owner = nil
+	m.clearedowner = false
 }
 
 // SetAvatarID sets the avatar edge to File by id.
@@ -3906,6 +4217,112 @@ func (m *RestaurantMutation) ResetHistories() {
 	m.removedhistories = nil
 }
 
+// AddCategoryIDs adds the categories edge to Category by ids.
+func (m *RestaurantMutation) AddCategoryIDs(ids ...int) {
+	if m.categories == nil {
+		m.categories = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.categories[ids[i]] = struct{}{}
+	}
+}
+
+// ClearCategories clears the categories edge to Category.
+func (m *RestaurantMutation) ClearCategories() {
+	m.clearedcategories = true
+}
+
+// CategoriesCleared returns if the edge categories was cleared.
+func (m *RestaurantMutation) CategoriesCleared() bool {
+	return m.clearedcategories
+}
+
+// RemoveCategoryIDs removes the categories edge to Category by ids.
+func (m *RestaurantMutation) RemoveCategoryIDs(ids ...int) {
+	if m.removedcategories == nil {
+		m.removedcategories = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.removedcategories[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedCategories returns the removed ids of categories.
+func (m *RestaurantMutation) RemovedCategoriesIDs() (ids []int) {
+	for id := range m.removedcategories {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// CategoriesIDs returns the categories ids in the mutation.
+func (m *RestaurantMutation) CategoriesIDs() (ids []int) {
+	for id := range m.categories {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetCategories reset all changes of the "categories" edge.
+func (m *RestaurantMutation) ResetCategories() {
+	m.categories = nil
+	m.clearedcategories = false
+	m.removedcategories = nil
+}
+
+// AddOrderIDs adds the orders edge to Order by ids.
+func (m *RestaurantMutation) AddOrderIDs(ids ...int) {
+	if m.orders == nil {
+		m.orders = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.orders[ids[i]] = struct{}{}
+	}
+}
+
+// ClearOrders clears the orders edge to Order.
+func (m *RestaurantMutation) ClearOrders() {
+	m.clearedorders = true
+}
+
+// OrdersCleared returns if the edge orders was cleared.
+func (m *RestaurantMutation) OrdersCleared() bool {
+	return m.clearedorders
+}
+
+// RemoveOrderIDs removes the orders edge to Order by ids.
+func (m *RestaurantMutation) RemoveOrderIDs(ids ...int) {
+	if m.removedorders == nil {
+		m.removedorders = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.removedorders[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedOrders returns the removed ids of orders.
+func (m *RestaurantMutation) RemovedOrdersIDs() (ids []int) {
+	for id := range m.removedorders {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// OrdersIDs returns the orders ids in the mutation.
+func (m *RestaurantMutation) OrdersIDs() (ids []int) {
+	for id := range m.orders {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetOrders reset all changes of the "orders" edge.
+func (m *RestaurantMutation) ResetOrders() {
+	m.orders = nil
+	m.clearedorders = false
+	m.removedorders = nil
+}
+
 // AddMenuIDs adds the menus edge to Menu by ids.
 func (m *RestaurantMutation) AddMenuIDs(ids ...int) {
 	if m.menus == nil {
@@ -3977,8 +4394,8 @@ func (m *RestaurantMutation) Fields() []string {
 	if m.name != nil {
 		fields = append(fields, restaurant.FieldName)
 	}
-	if m.sub_name != nil {
-		fields = append(fields, restaurant.FieldSubName)
+	if m.description != nil {
+		fields = append(fields, restaurant.FieldDescription)
 	}
 	if m.uri != nil {
 		fields = append(fields, restaurant.FieldURI)
@@ -3993,8 +4410,8 @@ func (m *RestaurantMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case restaurant.FieldName:
 		return m.Name()
-	case restaurant.FieldSubName:
-		return m.SubName()
+	case restaurant.FieldDescription:
+		return m.Description()
 	case restaurant.FieldURI:
 		return m.URI()
 	}
@@ -4008,8 +4425,8 @@ func (m *RestaurantMutation) OldField(ctx context.Context, name string) (ent.Val
 	switch name {
 	case restaurant.FieldName:
 		return m.OldName(ctx)
-	case restaurant.FieldSubName:
-		return m.OldSubName(ctx)
+	case restaurant.FieldDescription:
+		return m.OldDescription(ctx)
 	case restaurant.FieldURI:
 		return m.OldURI(ctx)
 	}
@@ -4028,15 +4445,15 @@ func (m *RestaurantMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetName(v)
 		return nil
-	case restaurant.FieldSubName:
+	case restaurant.FieldDescription:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetSubName(v)
+		m.SetDescription(v)
 		return nil
 	case restaurant.FieldURI:
-		v, ok := value.(*url.URL)
+		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -4072,8 +4489,8 @@ func (m *RestaurantMutation) AddField(name string, value ent.Value) error {
 // during this mutation.
 func (m *RestaurantMutation) ClearedFields() []string {
 	var fields []string
-	if m.FieldCleared(restaurant.FieldSubName) {
-		fields = append(fields, restaurant.FieldSubName)
+	if m.FieldCleared(restaurant.FieldDescription) {
+		fields = append(fields, restaurant.FieldDescription)
 	}
 	if m.FieldCleared(restaurant.FieldURI) {
 		fields = append(fields, restaurant.FieldURI)
@@ -4092,8 +4509,8 @@ func (m *RestaurantMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *RestaurantMutation) ClearField(name string) error {
 	switch name {
-	case restaurant.FieldSubName:
-		m.ClearSubName()
+	case restaurant.FieldDescription:
+		m.ClearDescription()
 		return nil
 	case restaurant.FieldURI:
 		m.ClearURI()
@@ -4110,8 +4527,8 @@ func (m *RestaurantMutation) ResetField(name string) error {
 	case restaurant.FieldName:
 		m.ResetName()
 		return nil
-	case restaurant.FieldSubName:
-		m.ResetSubName()
+	case restaurant.FieldDescription:
+		m.ResetDescription()
 		return nil
 	case restaurant.FieldURI:
 		m.ResetURI()
@@ -4123,7 +4540,10 @@ func (m *RestaurantMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this
 // mutation.
 func (m *RestaurantMutation) AddedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 9)
+	if m.owner != nil {
+		edges = append(edges, restaurant.EdgeOwner)
+	}
 	if m.avatar != nil {
 		edges = append(edges, restaurant.EdgeAvatar)
 	}
@@ -4139,6 +4559,12 @@ func (m *RestaurantMutation) AddedEdges() []string {
 	if m.histories != nil {
 		edges = append(edges, restaurant.EdgeHistories)
 	}
+	if m.categories != nil {
+		edges = append(edges, restaurant.EdgeCategories)
+	}
+	if m.orders != nil {
+		edges = append(edges, restaurant.EdgeOrders)
+	}
 	if m.menus != nil {
 		edges = append(edges, restaurant.EdgeMenus)
 	}
@@ -4149,6 +4575,10 @@ func (m *RestaurantMutation) AddedEdges() []string {
 // the given edge name.
 func (m *RestaurantMutation) AddedIDs(name string) []ent.Value {
 	switch name {
+	case restaurant.EdgeOwner:
+		if id := m.owner; id != nil {
+			return []ent.Value{*id}
+		}
 	case restaurant.EdgeAvatar:
 		if id := m.avatar; id != nil {
 			return []ent.Value{*id}
@@ -4173,6 +4603,18 @@ func (m *RestaurantMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case restaurant.EdgeCategories:
+		ids := make([]ent.Value, 0, len(m.categories))
+		for id := range m.categories {
+			ids = append(ids, id)
+		}
+		return ids
+	case restaurant.EdgeOrders:
+		ids := make([]ent.Value, 0, len(m.orders))
+		for id := range m.orders {
+			ids = append(ids, id)
+		}
+		return ids
 	case restaurant.EdgeMenus:
 		ids := make([]ent.Value, 0, len(m.menus))
 		for id := range m.menus {
@@ -4186,12 +4628,18 @@ func (m *RestaurantMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this
 // mutation.
 func (m *RestaurantMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 9)
 	if m.removedchildren != nil {
 		edges = append(edges, restaurant.EdgeChildren)
 	}
 	if m.removedhistories != nil {
 		edges = append(edges, restaurant.EdgeHistories)
+	}
+	if m.removedcategories != nil {
+		edges = append(edges, restaurant.EdgeCategories)
+	}
+	if m.removedorders != nil {
+		edges = append(edges, restaurant.EdgeOrders)
 	}
 	if m.removedmenus != nil {
 		edges = append(edges, restaurant.EdgeMenus)
@@ -4215,6 +4663,18 @@ func (m *RestaurantMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case restaurant.EdgeCategories:
+		ids := make([]ent.Value, 0, len(m.removedcategories))
+		for id := range m.removedcategories {
+			ids = append(ids, id)
+		}
+		return ids
+	case restaurant.EdgeOrders:
+		ids := make([]ent.Value, 0, len(m.removedorders))
+		for id := range m.removedorders {
+			ids = append(ids, id)
+		}
+		return ids
 	case restaurant.EdgeMenus:
 		ids := make([]ent.Value, 0, len(m.removedmenus))
 		for id := range m.removedmenus {
@@ -4228,7 +4688,10 @@ func (m *RestaurantMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this
 // mutation.
 func (m *RestaurantMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 9)
+	if m.clearedowner {
+		edges = append(edges, restaurant.EdgeOwner)
+	}
 	if m.clearedavatar {
 		edges = append(edges, restaurant.EdgeAvatar)
 	}
@@ -4244,6 +4707,12 @@ func (m *RestaurantMutation) ClearedEdges() []string {
 	if m.clearedhistories {
 		edges = append(edges, restaurant.EdgeHistories)
 	}
+	if m.clearedcategories {
+		edges = append(edges, restaurant.EdgeCategories)
+	}
+	if m.clearedorders {
+		edges = append(edges, restaurant.EdgeOrders)
+	}
 	if m.clearedmenus {
 		edges = append(edges, restaurant.EdgeMenus)
 	}
@@ -4254,6 +4723,8 @@ func (m *RestaurantMutation) ClearedEdges() []string {
 // cleared in this mutation.
 func (m *RestaurantMutation) EdgeCleared(name string) bool {
 	switch name {
+	case restaurant.EdgeOwner:
+		return m.clearedowner
 	case restaurant.EdgeAvatar:
 		return m.clearedavatar
 	case restaurant.EdgeRoot:
@@ -4264,6 +4735,10 @@ func (m *RestaurantMutation) EdgeCleared(name string) bool {
 		return m.clearedparent
 	case restaurant.EdgeHistories:
 		return m.clearedhistories
+	case restaurant.EdgeCategories:
+		return m.clearedcategories
+	case restaurant.EdgeOrders:
+		return m.clearedorders
 	case restaurant.EdgeMenus:
 		return m.clearedmenus
 	}
@@ -4274,6 +4749,9 @@ func (m *RestaurantMutation) EdgeCleared(name string) bool {
 // error if the edge name is not defined in the schema.
 func (m *RestaurantMutation) ClearEdge(name string) error {
 	switch name {
+	case restaurant.EdgeOwner:
+		m.ClearOwner()
+		return nil
 	case restaurant.EdgeAvatar:
 		m.ClearAvatar()
 		return nil
@@ -4292,6 +4770,9 @@ func (m *RestaurantMutation) ClearEdge(name string) error {
 // defined in the schema.
 func (m *RestaurantMutation) ResetEdge(name string) error {
 	switch name {
+	case restaurant.EdgeOwner:
+		m.ResetOwner()
+		return nil
 	case restaurant.EdgeAvatar:
 		m.ResetAvatar()
 		return nil
@@ -4306,6 +4787,12 @@ func (m *RestaurantMutation) ResetEdge(name string) error {
 		return nil
 	case restaurant.EdgeHistories:
 		m.ResetHistories()
+		return nil
+	case restaurant.EdgeCategories:
+		m.ResetCategories()
+		return nil
+	case restaurant.EdgeOrders:
+		m.ResetOrders()
 		return nil
 	case restaurant.EdgeMenus:
 		m.ResetMenus()

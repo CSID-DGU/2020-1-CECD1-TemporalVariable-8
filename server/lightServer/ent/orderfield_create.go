@@ -26,19 +26,15 @@ func (ofc *OrderFieldCreate) SetCount(u uint16) *OrderFieldCreate {
 	return ofc
 }
 
-// AddMenuIDs adds the menu edge to Menu by ids.
-func (ofc *OrderFieldCreate) AddMenuIDs(ids ...int) *OrderFieldCreate {
-	ofc.mutation.AddMenuIDs(ids...)
+// SetMenuID sets the menu edge to Menu by id.
+func (ofc *OrderFieldCreate) SetMenuID(id int) *OrderFieldCreate {
+	ofc.mutation.SetMenuID(id)
 	return ofc
 }
 
-// AddMenu adds the menu edges to Menu.
-func (ofc *OrderFieldCreate) AddMenu(m ...*Menu) *OrderFieldCreate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
-	}
-	return ofc.AddMenuIDs(ids...)
+// SetMenu sets the menu edge to Menu.
+func (ofc *OrderFieldCreate) SetMenu(m *Menu) *OrderFieldCreate {
+	return ofc.SetMenuID(m.ID)
 }
 
 // Mutation returns the OrderFieldMutation object of the builder.
@@ -100,7 +96,7 @@ func (ofc *OrderFieldCreate) check() error {
 			return &ValidationError{Name: "count", err: fmt.Errorf("ent: validator failed for field \"count\": %w", err)}
 		}
 	}
-	if len(ofc.mutation.MenuIDs()) == 0 {
+	if _, ok := ofc.mutation.MenuID(); !ok {
 		return &ValidationError{Name: "menu", err: errors.New("ent: missing required edge \"menu\"")}
 	}
 	return nil
@@ -140,7 +136,7 @@ func (ofc *OrderFieldCreate) createSpec() (*OrderField, *sqlgraph.CreateSpec) {
 	}
 	if nodes := ofc.mutation.MenuIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   orderfield.MenuTable,
 			Columns: []string{orderfield.MenuColumn},

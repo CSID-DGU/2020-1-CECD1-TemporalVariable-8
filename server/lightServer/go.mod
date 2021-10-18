@@ -3,7 +3,7 @@ module lightServer
 go 1.14
 
 require (
-	github.com/Boostport/address v0.5.2 // indirect
+	github.com/Boostport/address v0.5.2
 	github.com/Rhymond/go-money v1.0.1
 	github.com/biter777/countries v1.3.2
 	github.com/envoyproxy/protoc-gen-validate v0.4.1

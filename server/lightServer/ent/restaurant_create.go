@@ -6,11 +6,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"lightServer/ent/category"
 	"lightServer/ent/file"
 	"lightServer/ent/history"
 	"lightServer/ent/menu"
+	"lightServer/ent/order"
 	"lightServer/ent/restaurant"
-	"net/url"
+	"lightServer/ent/user"
 
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
 	"github.com/facebook/ent/schema/field"
@@ -29,24 +31,51 @@ func (rc *RestaurantCreate) SetName(s string) *RestaurantCreate {
 	return rc
 }
 
-// SetSubName sets the sub_name field.
-func (rc *RestaurantCreate) SetSubName(s string) *RestaurantCreate {
-	rc.mutation.SetSubName(s)
+// SetDescription sets the description field.
+func (rc *RestaurantCreate) SetDescription(s string) *RestaurantCreate {
+	rc.mutation.SetDescription(s)
 	return rc
 }
 
-// SetNillableSubName sets the sub_name field if the given value is not nil.
-func (rc *RestaurantCreate) SetNillableSubName(s *string) *RestaurantCreate {
+// SetNillableDescription sets the description field if the given value is not nil.
+func (rc *RestaurantCreate) SetNillableDescription(s *string) *RestaurantCreate {
 	if s != nil {
-		rc.SetSubName(*s)
+		rc.SetDescription(*s)
 	}
 	return rc
 }
 
 // SetURI sets the uri field.
-func (rc *RestaurantCreate) SetURI(u *url.URL) *RestaurantCreate {
-	rc.mutation.SetURI(u)
+func (rc *RestaurantCreate) SetURI(s string) *RestaurantCreate {
+	rc.mutation.SetURI(s)
 	return rc
+}
+
+// SetNillableURI sets the uri field if the given value is not nil.
+func (rc *RestaurantCreate) SetNillableURI(s *string) *RestaurantCreate {
+	if s != nil {
+		rc.SetURI(*s)
+	}
+	return rc
+}
+
+// SetOwnerID sets the owner edge to User by id.
+func (rc *RestaurantCreate) SetOwnerID(id int) *RestaurantCreate {
+	rc.mutation.SetOwnerID(id)
+	return rc
+}
+
+// SetNillableOwnerID sets the owner edge to User by id if the given value is not nil.
+func (rc *RestaurantCreate) SetNillableOwnerID(id *int) *RestaurantCreate {
+	if id != nil {
+		rc = rc.SetOwnerID(*id)
+	}
+	return rc
+}
+
+// SetOwner sets the owner edge to User.
+func (rc *RestaurantCreate) SetOwner(u *User) *RestaurantCreate {
+	return rc.SetOwnerID(u.ID)
 }
 
 // SetAvatarID sets the avatar edge to File by id.
@@ -134,6 +163,36 @@ func (rc *RestaurantCreate) AddHistories(h ...*History) *RestaurantCreate {
 		ids[i] = h[i].ID
 	}
 	return rc.AddHistoryIDs(ids...)
+}
+
+// AddCategoryIDs adds the categories edge to Category by ids.
+func (rc *RestaurantCreate) AddCategoryIDs(ids ...int) *RestaurantCreate {
+	rc.mutation.AddCategoryIDs(ids...)
+	return rc
+}
+
+// AddCategories adds the categories edges to Category.
+func (rc *RestaurantCreate) AddCategories(c ...*Category) *RestaurantCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return rc.AddCategoryIDs(ids...)
+}
+
+// AddOrderIDs adds the orders edge to Order by ids.
+func (rc *RestaurantCreate) AddOrderIDs(ids ...int) *RestaurantCreate {
+	rc.mutation.AddOrderIDs(ids...)
+	return rc
+}
+
+// AddOrders adds the orders edges to Order.
+func (rc *RestaurantCreate) AddOrders(o ...*Order) *RestaurantCreate {
+	ids := make([]int, len(o))
+	for i := range o {
+		ids[i] = o[i].ID
+	}
+	return rc.AddOrderIDs(ids...)
 }
 
 // AddMenuIDs adds the menus edge to Menu by ids.
@@ -245,21 +304,40 @@ func (rc *RestaurantCreate) createSpec() (*Restaurant, *sqlgraph.CreateSpec) {
 		})
 		_node.Name = value
 	}
-	if value, ok := rc.mutation.SubName(); ok {
+	if value, ok := rc.mutation.Description(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: restaurant.FieldSubName,
+			Column: restaurant.FieldDescription,
 		})
-		_node.SubName = value
+		_node.Description = value
 	}
 	if value, ok := rc.mutation.URI(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
+			Type:   field.TypeString,
 			Value:  value,
 			Column: restaurant.FieldURI,
 		})
 		_node.URI = value
+	}
+	if nodes := rc.mutation.OwnerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   restaurant.OwnerTable,
+			Columns: []string{restaurant.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := rc.mutation.AvatarIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -348,6 +426,44 @@ func (rc *RestaurantCreate) createSpec() (*Restaurant, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: history.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.CategoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   restaurant.CategoriesTable,
+			Columns: []string{restaurant.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.OrdersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   restaurant.OrdersTable,
+			Columns: []string{restaurant.OrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: order.FieldID,
 				},
 			},
 		}

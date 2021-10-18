@@ -9,11 +9,13 @@ const (
 	FieldID = "id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
-	// FieldSubName holds the string denoting the sub_name field in the database.
-	FieldSubName = "sub_name"
+	// FieldDescription holds the string denoting the description field in the database.
+	FieldDescription = "description"
 	// FieldURI holds the string denoting the uri field in the database.
 	FieldURI = "uri"
 
+	// EdgeOwner holds the string denoting the owner edge name in mutations.
+	EdgeOwner = "owner"
 	// EdgeAvatar holds the string denoting the avatar edge name in mutations.
 	EdgeAvatar = "avatar"
 	// EdgeRoot holds the string denoting the root edge name in mutations.
@@ -24,11 +26,22 @@ const (
 	EdgeParent = "parent"
 	// EdgeHistories holds the string denoting the histories edge name in mutations.
 	EdgeHistories = "histories"
+	// EdgeCategories holds the string denoting the categories edge name in mutations.
+	EdgeCategories = "categories"
+	// EdgeOrders holds the string denoting the orders edge name in mutations.
+	EdgeOrders = "orders"
 	// EdgeMenus holds the string denoting the menus edge name in mutations.
 	EdgeMenus = "menus"
 
 	// Table holds the table name of the restaurant in the database.
 	Table = "restaurants"
+	// OwnerTable is the table the holds the owner relation/edge.
+	OwnerTable = "restaurants"
+	// OwnerInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	OwnerInverseTable = "users"
+	// OwnerColumn is the table column denoting the owner relation/edge.
+	OwnerColumn = "restaurant_owner"
 	// AvatarTable is the table the holds the avatar relation/edge.
 	AvatarTable = "restaurants"
 	// AvatarInverseTable is the table name for the File entity.
@@ -53,6 +66,20 @@ const (
 	// HistoriesInverseTable is the table name for the History entity.
 	// It exists in this package in order to avoid circular dependency with the "history" package.
 	HistoriesInverseTable = "histories"
+	// CategoriesTable is the table the holds the categories relation/edge.
+	CategoriesTable = "categories"
+	// CategoriesInverseTable is the table name for the Category entity.
+	// It exists in this package in order to avoid circular dependency with the "category" package.
+	CategoriesInverseTable = "categories"
+	// CategoriesColumn is the table column denoting the categories relation/edge.
+	CategoriesColumn = "category_owner"
+	// OrdersTable is the table the holds the orders relation/edge.
+	OrdersTable = "orders"
+	// OrdersInverseTable is the table name for the Order entity.
+	// It exists in this package in order to avoid circular dependency with the "order" package.
+	OrdersInverseTable = "orders"
+	// OrdersColumn is the table column denoting the orders relation/edge.
+	OrdersColumn = "order_where"
 	// MenusTable is the table the holds the menus relation/edge.
 	MenusTable = "menus"
 	// MenusInverseTable is the table name for the Menu entity.
@@ -66,12 +93,13 @@ const (
 var Columns = []string{
 	FieldID,
 	FieldName,
-	FieldSubName,
+	FieldDescription,
 	FieldURI,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the Restaurant type.
 var ForeignKeys = []string{
+	"restaurant_owner",
 	"restaurant_avatar",
 	"restaurant_root",
 	"restaurant_parent",

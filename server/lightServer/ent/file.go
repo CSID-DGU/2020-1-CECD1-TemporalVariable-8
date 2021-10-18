@@ -24,8 +24,7 @@ type File struct {
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// CreateAt holds the value of the "create_at" field.
-	CreateAt    time.Time `json:"create_at,omitempty"`
-	menu_images *int
+	CreateAt time.Time `json:"create_at,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -36,13 +35,6 @@ func (*File) scanValues() []interface{} {
 		&sql.NullString{}, // mime
 		&sql.NullString{}, // name
 		&sql.NullTime{},   // create_at
-	}
-}
-
-// fkValues returns the types for scanning foreign-keys values from sql.Rows.
-func (*File) fkValues() []interface{} {
-	return []interface{}{
-		&sql.NullInt64{}, // menu_images
 	}
 }
 
@@ -77,15 +69,6 @@ func (f *File) assignValues(values ...interface{}) error {
 		return fmt.Errorf("unexpected type %T for field create_at", values[3])
 	} else if value.Valid {
 		f.CreateAt = value.Time
-	}
-	values = values[4:]
-	if len(values) == len(file.ForeignKeys) {
-		if value, ok := values[0].(*sql.NullInt64); !ok {
-			return fmt.Errorf("unexpected type %T for edge-field menu_images", value)
-		} else if value.Valid {
-			f.menu_images = new(int)
-			*f.menu_images = int(value.Int64)
-		}
 	}
 	return nil
 }

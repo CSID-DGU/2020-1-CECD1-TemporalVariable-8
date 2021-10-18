@@ -44,6 +44,21 @@ func (m *RestaurantStatistics) Validate() error {
 		return nil
 	}
 
+	for idx, item := range m.GetNames() {
+		_, _ = idx, item
+
+		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return RestaurantStatisticsValidationError{
+					field:  fmt.Sprintf("Names[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
 	return nil
 }
 
@@ -103,6 +118,73 @@ var _ interface {
 	ErrorName() string
 } = RestaurantStatisticsValidationError{}
 
+// Validate checks the field values on RestaurantName with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *RestaurantName) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for Url
+
+	return nil
+}
+
+// RestaurantNameValidationError is the validation error returned by
+// RestaurantName.Validate if the designated constraints aren't met.
+type RestaurantNameValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e RestaurantNameValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e RestaurantNameValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e RestaurantNameValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e RestaurantNameValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e RestaurantNameValidationError) ErrorName() string { return "RestaurantNameValidationError" }
+
+// Error satisfies the builtin error interface
+func (e RestaurantNameValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sRestaurantName.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = RestaurantNameValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = RestaurantNameValidationError{}
+
 // Validate checks the field values on Restaurant with the rules defined in the
 // proto definition for this message. If any rules are violated, an error is returned.
 func (m *Restaurant) Validate() error {
@@ -110,15 +192,23 @@ func (m *Restaurant) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Name
+	if v, ok := interface{}(m.GetName()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RestaurantValidationError{
+				field:  "Name",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
-	// no validation rules for SubName
+	// no validation rules for Description
 
 	// no validation rules for Url
 
-	// no validation rules for Root
+	// no validation rules for Image
 
-	// no validation rules for Parent
+	// no validation rules for Id
 
 	return nil
 }
@@ -184,7 +274,15 @@ func (m *Menus) Validate() error {
 		return nil
 	}
 
-	// no validation rules for Owner
+	if v, ok := interface{}(m.GetOwner()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return MenusValidationError{
+				field:  "Owner",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
 	for idx, item := range m.GetMenus() {
 		_, _ = idx, item
@@ -275,7 +373,7 @@ func (m *Menu) Validate() error {
 
 	// no validation rules for Currency
 
-	// no validation rules for Owner
+	// no validation rules for Image
 
 	for idx, item := range m.GetOptions() {
 		_, _ = idx, item
@@ -348,6 +446,80 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = MenuValidationError{}
+
+// Validate checks the field values on Categories with the rules defined in the
+// proto definition for this message. If any rules are violated, an error is returned.
+func (m *Categories) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	if v, ok := interface{}(m.GetOwner()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return CategoriesValidationError{
+				field:  "Owner",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	return nil
+}
+
+// CategoriesValidationError is the validation error returned by
+// Categories.Validate if the designated constraints aren't met.
+type CategoriesValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e CategoriesValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e CategoriesValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e CategoriesValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e CategoriesValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e CategoriesValidationError) ErrorName() string { return "CategoriesValidationError" }
+
+// Error satisfies the builtin error interface
+func (e CategoriesValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sCategories.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = CategoriesValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = CategoriesValidationError{}
 
 // Validate checks the field values on Auth with the rules defined in the proto
 // definition for this message. If any rules are violated, an error is returned.
@@ -578,6 +750,10 @@ func (m *OrderField) Validate() error {
 
 	// no validation rules for Count
 
+	// no validation rules for Name
+
+	// no validation rules for Amount
+
 	return nil
 }
 
@@ -642,13 +818,37 @@ func (m *Order) Validate() error {
 		return nil
 	}
 
-	for idx, item := range m.GetFields() {
+	if v, ok := interface{}(m.GetWhere()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return OrderValidationError{
+				field:  "Where",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Who
+
+	// no validation rules for OrderAt
+
+	// no validation rules for CookingAt
+
+	// no validation rules for DeliverAt
+
+	// no validation rules for CompleteAt
+
+	// no validation rules for State
+
+	// no validation rules for Id
+
+	for idx, item := range m.GetPurchased() {
 		_, _ = idx, item
 
 		if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
 				return OrderValidationError{
-					field:  fmt.Sprintf("Fields[%v]", idx),
+					field:  fmt.Sprintf("Purchased[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
 				}
@@ -713,3 +913,283 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = OrderValidationError{}
+
+// Validate checks the field values on OrderResult with the rules defined in
+// the proto definition for this message. If any rules are violated, an error
+// is returned.
+func (m *OrderResult) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for OrderId
+
+	return nil
+}
+
+// OrderResultValidationError is the validation error returned by
+// OrderResult.Validate if the designated constraints aren't met.
+type OrderResultValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e OrderResultValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e OrderResultValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e OrderResultValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e OrderResultValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e OrderResultValidationError) ErrorName() string { return "OrderResultValidationError" }
+
+// Error satisfies the builtin error interface
+func (e OrderResultValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sOrderResult.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = OrderResultValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = OrderResultValidationError{}
+
+// Validate checks the field values on ManageCookingResult with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ManageCookingResult) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for OrderId
+
+	// no validation rules for TimeAt
+
+	return nil
+}
+
+// ManageCookingResultValidationError is the validation error returned by
+// ManageCookingResult.Validate if the designated constraints aren't met.
+type ManageCookingResultValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ManageCookingResultValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ManageCookingResultValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ManageCookingResultValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ManageCookingResultValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ManageCookingResultValidationError) ErrorName() string {
+	return "ManageCookingResultValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ManageCookingResultValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sManageCookingResult.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ManageCookingResultValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ManageCookingResultValidationError{}
+
+// Validate checks the field values on ManageDelieverResult with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ManageDelieverResult) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for OrderId
+
+	// no validation rules for TimeAt
+
+	return nil
+}
+
+// ManageDelieverResultValidationError is the validation error returned by
+// ManageDelieverResult.Validate if the designated constraints aren't met.
+type ManageDelieverResultValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ManageDelieverResultValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ManageDelieverResultValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ManageDelieverResultValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ManageDelieverResultValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ManageDelieverResultValidationError) ErrorName() string {
+	return "ManageDelieverResultValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ManageDelieverResultValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sManageDelieverResult.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ManageDelieverResultValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ManageDelieverResultValidationError{}
+
+// Validate checks the field values on ManageCompleteResult with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, an error is returned.
+func (m *ManageCompleteResult) Validate() error {
+	if m == nil {
+		return nil
+	}
+
+	// no validation rules for OrderId
+
+	// no validation rules for TimeAt
+
+	return nil
+}
+
+// ManageCompleteResultValidationError is the validation error returned by
+// ManageCompleteResult.Validate if the designated constraints aren't met.
+type ManageCompleteResultValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ManageCompleteResultValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ManageCompleteResultValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ManageCompleteResultValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ManageCompleteResultValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ManageCompleteResultValidationError) ErrorName() string {
+	return "ManageCompleteResultValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ManageCompleteResultValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sManageCompleteResult.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ManageCompleteResultValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ManageCompleteResultValidationError{}

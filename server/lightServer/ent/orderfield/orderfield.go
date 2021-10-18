@@ -16,7 +16,7 @@ const (
 	// Table holds the table name of the orderfield in the database.
 	Table = "order_fields"
 	// MenuTable is the table the holds the menu relation/edge.
-	MenuTable = "menus"
+	MenuTable = "order_fields"
 	// MenuInverseTable is the table name for the Menu entity.
 	// It exists in this package in order to avoid circular dependency with the "menu" package.
 	MenuInverseTable = "menus"
@@ -33,6 +33,7 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the OrderField type.
 var ForeignKeys = []string{
 	"order_items",
+	"order_field_menu",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

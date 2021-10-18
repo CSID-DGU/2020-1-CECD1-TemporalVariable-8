@@ -100,17 +100,24 @@ func OrderAt(v time.Time) predicate.Order {
 	})
 }
 
-// DeliveryAt applies equality check predicate on the "delivery_at" field. It's identical to DeliveryAtEQ.
-func DeliveryAt(v time.Time) predicate.Order {
+// CookingAt applies equality check predicate on the "cooking_at" field. It's identical to CookingAtEQ.
+func CookingAt(v time.Time) predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDeliveryAt), v))
+		s.Where(sql.EQ(s.C(FieldCookingAt), v))
 	})
 }
 
-// ArriveAt applies equality check predicate on the "arrive_at" field. It's identical to ArriveAtEQ.
-func ArriveAt(v time.Time) predicate.Order {
+// DeliverAt applies equality check predicate on the "deliver_at" field. It's identical to DeliverAtEQ.
+func DeliverAt(v time.Time) predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldArriveAt), v))
+		s.Where(sql.EQ(s.C(FieldDeliverAt), v))
+	})
+}
+
+// CompleteAt applies equality check predicate on the "complete_at" field. It's identical to CompleteAtEQ.
+func CompleteAt(v time.Time) predicate.Order {
+	return predicate.Order(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCompleteAt), v))
 	})
 }
 
@@ -190,22 +197,22 @@ func OrderAtLTE(v time.Time) predicate.Order {
 	})
 }
 
-// DeliveryAtEQ applies the EQ predicate on the "delivery_at" field.
-func DeliveryAtEQ(v time.Time) predicate.Order {
+// CookingAtEQ applies the EQ predicate on the "cooking_at" field.
+func CookingAtEQ(v time.Time) predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDeliveryAt), v))
+		s.Where(sql.EQ(s.C(FieldCookingAt), v))
 	})
 }
 
-// DeliveryAtNEQ applies the NEQ predicate on the "delivery_at" field.
-func DeliveryAtNEQ(v time.Time) predicate.Order {
+// CookingAtNEQ applies the NEQ predicate on the "cooking_at" field.
+func CookingAtNEQ(v time.Time) predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldDeliveryAt), v))
+		s.Where(sql.NEQ(s.C(FieldCookingAt), v))
 	})
 }
 
-// DeliveryAtIn applies the In predicate on the "delivery_at" field.
-func DeliveryAtIn(vs ...time.Time) predicate.Order {
+// CookingAtIn applies the In predicate on the "cooking_at" field.
+func CookingAtIn(vs ...time.Time) predicate.Order {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -217,12 +224,12 @@ func DeliveryAtIn(vs ...time.Time) predicate.Order {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldDeliveryAt), v...))
+		s.Where(sql.In(s.C(FieldCookingAt), v...))
 	})
 }
 
-// DeliveryAtNotIn applies the NotIn predicate on the "delivery_at" field.
-func DeliveryAtNotIn(vs ...time.Time) predicate.Order {
+// CookingAtNotIn applies the NotIn predicate on the "cooking_at" field.
+func CookingAtNotIn(vs ...time.Time) predicate.Order {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -234,54 +241,68 @@ func DeliveryAtNotIn(vs ...time.Time) predicate.Order {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldDeliveryAt), v...))
+		s.Where(sql.NotIn(s.C(FieldCookingAt), v...))
 	})
 }
 
-// DeliveryAtGT applies the GT predicate on the "delivery_at" field.
-func DeliveryAtGT(v time.Time) predicate.Order {
+// CookingAtGT applies the GT predicate on the "cooking_at" field.
+func CookingAtGT(v time.Time) predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldDeliveryAt), v))
+		s.Where(sql.GT(s.C(FieldCookingAt), v))
 	})
 }
 
-// DeliveryAtGTE applies the GTE predicate on the "delivery_at" field.
-func DeliveryAtGTE(v time.Time) predicate.Order {
+// CookingAtGTE applies the GTE predicate on the "cooking_at" field.
+func CookingAtGTE(v time.Time) predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldDeliveryAt), v))
+		s.Where(sql.GTE(s.C(FieldCookingAt), v))
 	})
 }
 
-// DeliveryAtLT applies the LT predicate on the "delivery_at" field.
-func DeliveryAtLT(v time.Time) predicate.Order {
+// CookingAtLT applies the LT predicate on the "cooking_at" field.
+func CookingAtLT(v time.Time) predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldDeliveryAt), v))
+		s.Where(sql.LT(s.C(FieldCookingAt), v))
 	})
 }
 
-// DeliveryAtLTE applies the LTE predicate on the "delivery_at" field.
-func DeliveryAtLTE(v time.Time) predicate.Order {
+// CookingAtLTE applies the LTE predicate on the "cooking_at" field.
+func CookingAtLTE(v time.Time) predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldDeliveryAt), v))
+		s.Where(sql.LTE(s.C(FieldCookingAt), v))
 	})
 }
 
-// ArriveAtEQ applies the EQ predicate on the "arrive_at" field.
-func ArriveAtEQ(v time.Time) predicate.Order {
+// CookingAtIsNil applies the IsNil predicate on the "cooking_at" field.
+func CookingAtIsNil() predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldArriveAt), v))
+		s.Where(sql.IsNull(s.C(FieldCookingAt)))
 	})
 }
 
-// ArriveAtNEQ applies the NEQ predicate on the "arrive_at" field.
-func ArriveAtNEQ(v time.Time) predicate.Order {
+// CookingAtNotNil applies the NotNil predicate on the "cooking_at" field.
+func CookingAtNotNil() predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldArriveAt), v))
+		s.Where(sql.NotNull(s.C(FieldCookingAt)))
 	})
 }
 
-// ArriveAtIn applies the In predicate on the "arrive_at" field.
-func ArriveAtIn(vs ...time.Time) predicate.Order {
+// DeliverAtEQ applies the EQ predicate on the "deliver_at" field.
+func DeliverAtEQ(v time.Time) predicate.Order {
+	return predicate.Order(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDeliverAt), v))
+	})
+}
+
+// DeliverAtNEQ applies the NEQ predicate on the "deliver_at" field.
+func DeliverAtNEQ(v time.Time) predicate.Order {
+	return predicate.Order(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldDeliverAt), v))
+	})
+}
+
+// DeliverAtIn applies the In predicate on the "deliver_at" field.
+func DeliverAtIn(vs ...time.Time) predicate.Order {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -293,12 +314,12 @@ func ArriveAtIn(vs ...time.Time) predicate.Order {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldArriveAt), v...))
+		s.Where(sql.In(s.C(FieldDeliverAt), v...))
 	})
 }
 
-// ArriveAtNotIn applies the NotIn predicate on the "arrive_at" field.
-func ArriveAtNotIn(vs ...time.Time) predicate.Order {
+// DeliverAtNotIn applies the NotIn predicate on the "deliver_at" field.
+func DeliverAtNotIn(vs ...time.Time) predicate.Order {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -310,63 +331,139 @@ func ArriveAtNotIn(vs ...time.Time) predicate.Order {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldArriveAt), v...))
+		s.Where(sql.NotIn(s.C(FieldDeliverAt), v...))
 	})
 }
 
-// ArriveAtGT applies the GT predicate on the "arrive_at" field.
-func ArriveAtGT(v time.Time) predicate.Order {
+// DeliverAtGT applies the GT predicate on the "deliver_at" field.
+func DeliverAtGT(v time.Time) predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldArriveAt), v))
+		s.Where(sql.GT(s.C(FieldDeliverAt), v))
 	})
 }
 
-// ArriveAtGTE applies the GTE predicate on the "arrive_at" field.
-func ArriveAtGTE(v time.Time) predicate.Order {
+// DeliverAtGTE applies the GTE predicate on the "deliver_at" field.
+func DeliverAtGTE(v time.Time) predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldArriveAt), v))
+		s.Where(sql.GTE(s.C(FieldDeliverAt), v))
 	})
 }
 
-// ArriveAtLT applies the LT predicate on the "arrive_at" field.
-func ArriveAtLT(v time.Time) predicate.Order {
+// DeliverAtLT applies the LT predicate on the "deliver_at" field.
+func DeliverAtLT(v time.Time) predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldArriveAt), v))
+		s.Where(sql.LT(s.C(FieldDeliverAt), v))
 	})
 }
 
-// ArriveAtLTE applies the LTE predicate on the "arrive_at" field.
-func ArriveAtLTE(v time.Time) predicate.Order {
+// DeliverAtLTE applies the LTE predicate on the "deliver_at" field.
+func DeliverAtLTE(v time.Time) predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldArriveAt), v))
+		s.Where(sql.LTE(s.C(FieldDeliverAt), v))
 	})
 }
 
-// HasItems applies the HasEdge predicate on the "items" edge.
-func HasItems() predicate.Order {
+// DeliverAtIsNil applies the IsNil predicate on the "deliver_at" field.
+func DeliverAtIsNil() predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ItemsTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ItemsTable, ItemsColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
+		s.Where(sql.IsNull(s.C(FieldDeliverAt)))
 	})
 }
 
-// HasItemsWith applies the HasEdge predicate on the "items" edge with a given conditions (other predicates).
-func HasItemsWith(preds ...predicate.OrderField) predicate.Order {
+// DeliverAtNotNil applies the NotNil predicate on the "deliver_at" field.
+func DeliverAtNotNil() predicate.Order {
 	return predicate.Order(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(ItemsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, ItemsTable, ItemsColumn),
-		)
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
+		s.Where(sql.NotNull(s.C(FieldDeliverAt)))
+	})
+}
+
+// CompleteAtEQ applies the EQ predicate on the "complete_at" field.
+func CompleteAtEQ(v time.Time) predicate.Order {
+	return predicate.Order(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCompleteAt), v))
+	})
+}
+
+// CompleteAtNEQ applies the NEQ predicate on the "complete_at" field.
+func CompleteAtNEQ(v time.Time) predicate.Order {
+	return predicate.Order(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldCompleteAt), v))
+	})
+}
+
+// CompleteAtIn applies the In predicate on the "complete_at" field.
+func CompleteAtIn(vs ...time.Time) predicate.Order {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Order(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldCompleteAt), v...))
+	})
+}
+
+// CompleteAtNotIn applies the NotIn predicate on the "complete_at" field.
+func CompleteAtNotIn(vs ...time.Time) predicate.Order {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Order(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldCompleteAt), v...))
+	})
+}
+
+// CompleteAtGT applies the GT predicate on the "complete_at" field.
+func CompleteAtGT(v time.Time) predicate.Order {
+	return predicate.Order(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldCompleteAt), v))
+	})
+}
+
+// CompleteAtGTE applies the GTE predicate on the "complete_at" field.
+func CompleteAtGTE(v time.Time) predicate.Order {
+	return predicate.Order(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldCompleteAt), v))
+	})
+}
+
+// CompleteAtLT applies the LT predicate on the "complete_at" field.
+func CompleteAtLT(v time.Time) predicate.Order {
+	return predicate.Order(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldCompleteAt), v))
+	})
+}
+
+// CompleteAtLTE applies the LTE predicate on the "complete_at" field.
+func CompleteAtLTE(v time.Time) predicate.Order {
+	return predicate.Order(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldCompleteAt), v))
+	})
+}
+
+// CompleteAtIsNil applies the IsNil predicate on the "complete_at" field.
+func CompleteAtIsNil() predicate.Order {
+	return predicate.Order(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldCompleteAt)))
+	})
+}
+
+// CompleteAtNotNil applies the NotNil predicate on the "complete_at" field.
+func CompleteAtNotNil() predicate.Order {
+	return predicate.Order(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldCompleteAt)))
 	})
 }
 
@@ -389,6 +486,62 @@ func HasWhoWith(preds ...predicate.User) predicate.Order {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(WhoInverseTable, FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, WhoTable, WhoColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasWhere applies the HasEdge predicate on the "where" edge.
+func HasWhere() predicate.Order {
+	return predicate.Order(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(WhereTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, WhereTable, WhereColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasWhereWith applies the HasEdge predicate on the "where" edge with a given conditions (other predicates).
+func HasWhereWith(preds ...predicate.Restaurant) predicate.Order {
+	return predicate.Order(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(WhereInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, WhereTable, WhereColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasItems applies the HasEdge predicate on the "items" edge.
+func HasItems() predicate.Order {
+	return predicate.Order(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ItemsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ItemsTable, ItemsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasItemsWith applies the HasEdge predicate on the "items" edge with a given conditions (other predicates).
+func HasItemsWith(preds ...predicate.OrderField) predicate.Order {
+	return predicate.Order(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ItemsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ItemsTable, ItemsColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

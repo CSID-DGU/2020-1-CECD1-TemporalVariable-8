@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"lightServer/ent/category"
 	"lightServer/ent/file"
 	"lightServer/ent/menu"
 	"lightServer/ent/predicate"
@@ -43,6 +44,12 @@ func (mu *MenuUpdate) SetDescription(s string) *MenuUpdate {
 	return mu
 }
 
+// SetIsOption sets the isOption field.
+func (mu *MenuUpdate) SetIsOption(b bool) *MenuUpdate {
+	mu.mutation.SetIsOption(b)
+	return mu
+}
+
 // SetPrice sets the price field.
 func (mu *MenuUpdate) SetPrice(m *money.Money) *MenuUpdate {
 	mu.mutation.SetPrice(m)
@@ -66,19 +73,38 @@ func (mu *MenuUpdate) SetOwner(r *Restaurant) *MenuUpdate {
 	return mu.SetOwnerID(r.ID)
 }
 
-// AddImageIDs adds the images edge to File by ids.
-func (mu *MenuUpdate) AddImageIDs(ids ...int) *MenuUpdate {
-	mu.mutation.AddImageIDs(ids...)
+// AddCategoryIDs adds the category edge to Category by ids.
+func (mu *MenuUpdate) AddCategoryIDs(ids ...int) *MenuUpdate {
+	mu.mutation.AddCategoryIDs(ids...)
 	return mu
 }
 
-// AddImages adds the images edges to File.
-func (mu *MenuUpdate) AddImages(f ...*File) *MenuUpdate {
-	ids := make([]int, len(f))
-	for i := range f {
-		ids[i] = f[i].ID
+// AddCategory adds the category edges to Category.
+func (mu *MenuUpdate) AddCategory(c ...*Category) *MenuUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
 	}
-	return mu.AddImageIDs(ids...)
+	return mu.AddCategoryIDs(ids...)
+}
+
+// SetImagesID sets the images edge to File by id.
+func (mu *MenuUpdate) SetImagesID(id int) *MenuUpdate {
+	mu.mutation.SetImagesID(id)
+	return mu
+}
+
+// SetNillableImagesID sets the images edge to File by id if the given value is not nil.
+func (mu *MenuUpdate) SetNillableImagesID(id *int) *MenuUpdate {
+	if id != nil {
+		mu = mu.SetImagesID(*id)
+	}
+	return mu
+}
+
+// SetImages sets the images edge to File.
+func (mu *MenuUpdate) SetImages(f *File) *MenuUpdate {
+	return mu.SetImagesID(f.ID)
 }
 
 // AddOptionIDs adds the options edge to Menu by ids.
@@ -107,25 +133,31 @@ func (mu *MenuUpdate) ClearOwner() *MenuUpdate {
 	return mu
 }
 
-// ClearImages clears all "images" edges to type File.
+// ClearCategory clears all "category" edges to type Category.
+func (mu *MenuUpdate) ClearCategory() *MenuUpdate {
+	mu.mutation.ClearCategory()
+	return mu
+}
+
+// RemoveCategoryIDs removes the category edge to Category by ids.
+func (mu *MenuUpdate) RemoveCategoryIDs(ids ...int) *MenuUpdate {
+	mu.mutation.RemoveCategoryIDs(ids...)
+	return mu
+}
+
+// RemoveCategory removes category edges to Category.
+func (mu *MenuUpdate) RemoveCategory(c ...*Category) *MenuUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return mu.RemoveCategoryIDs(ids...)
+}
+
+// ClearImages clears the "images" edge to type File.
 func (mu *MenuUpdate) ClearImages() *MenuUpdate {
 	mu.mutation.ClearImages()
 	return mu
-}
-
-// RemoveImageIDs removes the images edge to File by ids.
-func (mu *MenuUpdate) RemoveImageIDs(ids ...int) *MenuUpdate {
-	mu.mutation.RemoveImageIDs(ids...)
-	return mu
-}
-
-// RemoveImages removes images edges to File.
-func (mu *MenuUpdate) RemoveImages(f ...*File) *MenuUpdate {
-	ids := make([]int, len(f))
-	for i := range f {
-		ids[i] = f[i].ID
-	}
-	return mu.RemoveImageIDs(ids...)
 }
 
 // ClearOptions clears all "options" edges to type Menu.
@@ -251,6 +283,13 @@ func (mu *MenuUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: menu.FieldDescription,
 		})
 	}
+	if value, ok := mu.mutation.IsOption(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: menu.FieldIsOption,
+		})
+	}
 	if value, ok := mu.mutation.Price(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeJSON,
@@ -299,33 +338,33 @@ func (mu *MenuUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if mu.mutation.ImagesCleared() {
+	if mu.mutation.CategoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   menu.ImagesTable,
-			Columns: []string{menu.ImagesColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   menu.CategoryTable,
+			Columns: menu.CategoryPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: file.FieldID,
+					Column: category.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := mu.mutation.RemovedImagesIDs(); len(nodes) > 0 && !mu.mutation.ImagesCleared() {
+	if nodes := mu.mutation.RemovedCategoryIDs(); len(nodes) > 0 && !mu.mutation.CategoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   menu.ImagesTable,
-			Columns: []string{menu.ImagesColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   menu.CategoryTable,
+			Columns: menu.CategoryPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: file.FieldID,
+					Column: category.FieldID,
 				},
 			},
 		}
@@ -334,9 +373,44 @@ func (mu *MenuUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
+	if nodes := mu.mutation.CategoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   menu.CategoryTable,
+			Columns: menu.CategoryPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if mu.mutation.ImagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   menu.ImagesTable,
+			Columns: []string{menu.ImagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: file.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
 	if nodes := mu.mutation.ImagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   menu.ImagesTable,
 			Columns: []string{menu.ImagesColumn},
@@ -437,6 +511,12 @@ func (muo *MenuUpdateOne) SetDescription(s string) *MenuUpdateOne {
 	return muo
 }
 
+// SetIsOption sets the isOption field.
+func (muo *MenuUpdateOne) SetIsOption(b bool) *MenuUpdateOne {
+	muo.mutation.SetIsOption(b)
+	return muo
+}
+
 // SetPrice sets the price field.
 func (muo *MenuUpdateOne) SetPrice(m *money.Money) *MenuUpdateOne {
 	muo.mutation.SetPrice(m)
@@ -460,19 +540,38 @@ func (muo *MenuUpdateOne) SetOwner(r *Restaurant) *MenuUpdateOne {
 	return muo.SetOwnerID(r.ID)
 }
 
-// AddImageIDs adds the images edge to File by ids.
-func (muo *MenuUpdateOne) AddImageIDs(ids ...int) *MenuUpdateOne {
-	muo.mutation.AddImageIDs(ids...)
+// AddCategoryIDs adds the category edge to Category by ids.
+func (muo *MenuUpdateOne) AddCategoryIDs(ids ...int) *MenuUpdateOne {
+	muo.mutation.AddCategoryIDs(ids...)
 	return muo
 }
 
-// AddImages adds the images edges to File.
-func (muo *MenuUpdateOne) AddImages(f ...*File) *MenuUpdateOne {
-	ids := make([]int, len(f))
-	for i := range f {
-		ids[i] = f[i].ID
+// AddCategory adds the category edges to Category.
+func (muo *MenuUpdateOne) AddCategory(c ...*Category) *MenuUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
 	}
-	return muo.AddImageIDs(ids...)
+	return muo.AddCategoryIDs(ids...)
+}
+
+// SetImagesID sets the images edge to File by id.
+func (muo *MenuUpdateOne) SetImagesID(id int) *MenuUpdateOne {
+	muo.mutation.SetImagesID(id)
+	return muo
+}
+
+// SetNillableImagesID sets the images edge to File by id if the given value is not nil.
+func (muo *MenuUpdateOne) SetNillableImagesID(id *int) *MenuUpdateOne {
+	if id != nil {
+		muo = muo.SetImagesID(*id)
+	}
+	return muo
+}
+
+// SetImages sets the images edge to File.
+func (muo *MenuUpdateOne) SetImages(f *File) *MenuUpdateOne {
+	return muo.SetImagesID(f.ID)
 }
 
 // AddOptionIDs adds the options edge to Menu by ids.
@@ -501,25 +600,31 @@ func (muo *MenuUpdateOne) ClearOwner() *MenuUpdateOne {
 	return muo
 }
 
-// ClearImages clears all "images" edges to type File.
+// ClearCategory clears all "category" edges to type Category.
+func (muo *MenuUpdateOne) ClearCategory() *MenuUpdateOne {
+	muo.mutation.ClearCategory()
+	return muo
+}
+
+// RemoveCategoryIDs removes the category edge to Category by ids.
+func (muo *MenuUpdateOne) RemoveCategoryIDs(ids ...int) *MenuUpdateOne {
+	muo.mutation.RemoveCategoryIDs(ids...)
+	return muo
+}
+
+// RemoveCategory removes category edges to Category.
+func (muo *MenuUpdateOne) RemoveCategory(c ...*Category) *MenuUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return muo.RemoveCategoryIDs(ids...)
+}
+
+// ClearImages clears the "images" edge to type File.
 func (muo *MenuUpdateOne) ClearImages() *MenuUpdateOne {
 	muo.mutation.ClearImages()
 	return muo
-}
-
-// RemoveImageIDs removes the images edge to File by ids.
-func (muo *MenuUpdateOne) RemoveImageIDs(ids ...int) *MenuUpdateOne {
-	muo.mutation.RemoveImageIDs(ids...)
-	return muo
-}
-
-// RemoveImages removes images edges to File.
-func (muo *MenuUpdateOne) RemoveImages(f ...*File) *MenuUpdateOne {
-	ids := make([]int, len(f))
-	for i := range f {
-		ids[i] = f[i].ID
-	}
-	return muo.RemoveImageIDs(ids...)
 }
 
 // ClearOptions clears all "options" edges to type Menu.
@@ -643,6 +748,13 @@ func (muo *MenuUpdateOne) sqlSave(ctx context.Context) (_node *Menu, err error) 
 			Column: menu.FieldDescription,
 		})
 	}
+	if value, ok := muo.mutation.IsOption(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: menu.FieldIsOption,
+		})
+	}
 	if value, ok := muo.mutation.Price(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeJSON,
@@ -691,33 +803,33 @@ func (muo *MenuUpdateOne) sqlSave(ctx context.Context) (_node *Menu, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if muo.mutation.ImagesCleared() {
+	if muo.mutation.CategoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   menu.ImagesTable,
-			Columns: []string{menu.ImagesColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   menu.CategoryTable,
+			Columns: menu.CategoryPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: file.FieldID,
+					Column: category.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := muo.mutation.RemovedImagesIDs(); len(nodes) > 0 && !muo.mutation.ImagesCleared() {
+	if nodes := muo.mutation.RemovedCategoryIDs(); len(nodes) > 0 && !muo.mutation.CategoryCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   menu.ImagesTable,
-			Columns: []string{menu.ImagesColumn},
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   menu.CategoryTable,
+			Columns: menu.CategoryPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: file.FieldID,
+					Column: category.FieldID,
 				},
 			},
 		}
@@ -726,9 +838,44 @@ func (muo *MenuUpdateOne) sqlSave(ctx context.Context) (_node *Menu, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
+	if nodes := muo.mutation.CategoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   menu.CategoryTable,
+			Columns: menu.CategoryPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if muo.mutation.ImagesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   menu.ImagesTable,
+			Columns: []string{menu.ImagesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: file.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
 	if nodes := muo.mutation.ImagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   menu.ImagesTable,
 			Columns: []string{menu.ImagesColumn},

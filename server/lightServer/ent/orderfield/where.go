@@ -181,7 +181,7 @@ func HasMenu() predicate.OrderField {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(MenuTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, MenuTable, MenuColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, MenuTable, MenuColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -193,7 +193,7 @@ func HasMenuWith(preds ...predicate.Menu) predicate.OrderField {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(MenuInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, MenuTable, MenuColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, MenuTable, MenuColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

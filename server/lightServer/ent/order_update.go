@@ -9,6 +9,7 @@ import (
 	"lightServer/ent/order"
 	"lightServer/ent/orderfield"
 	"lightServer/ent/predicate"
+	"lightServer/ent/restaurant"
 	"lightServer/ent/user"
 	"time"
 
@@ -45,16 +46,86 @@ func (ou *OrderUpdate) SetNillableOrderAt(t *time.Time) *OrderUpdate {
 	return ou
 }
 
-// SetDeliveryAt sets the delivery_at field.
-func (ou *OrderUpdate) SetDeliveryAt(t time.Time) *OrderUpdate {
-	ou.mutation.SetDeliveryAt(t)
+// SetCookingAt sets the cooking_at field.
+func (ou *OrderUpdate) SetCookingAt(t time.Time) *OrderUpdate {
+	ou.mutation.SetCookingAt(t)
 	return ou
 }
 
-// SetArriveAt sets the arrive_at field.
-func (ou *OrderUpdate) SetArriveAt(t time.Time) *OrderUpdate {
-	ou.mutation.SetArriveAt(t)
+// SetNillableCookingAt sets the cooking_at field if the given value is not nil.
+func (ou *OrderUpdate) SetNillableCookingAt(t *time.Time) *OrderUpdate {
+	if t != nil {
+		ou.SetCookingAt(*t)
+	}
 	return ou
+}
+
+// ClearCookingAt clears the value of cooking_at.
+func (ou *OrderUpdate) ClearCookingAt() *OrderUpdate {
+	ou.mutation.ClearCookingAt()
+	return ou
+}
+
+// SetDeliverAt sets the deliver_at field.
+func (ou *OrderUpdate) SetDeliverAt(t time.Time) *OrderUpdate {
+	ou.mutation.SetDeliverAt(t)
+	return ou
+}
+
+// SetNillableDeliverAt sets the deliver_at field if the given value is not nil.
+func (ou *OrderUpdate) SetNillableDeliverAt(t *time.Time) *OrderUpdate {
+	if t != nil {
+		ou.SetDeliverAt(*t)
+	}
+	return ou
+}
+
+// ClearDeliverAt clears the value of deliver_at.
+func (ou *OrderUpdate) ClearDeliverAt() *OrderUpdate {
+	ou.mutation.ClearDeliverAt()
+	return ou
+}
+
+// SetCompleteAt sets the complete_at field.
+func (ou *OrderUpdate) SetCompleteAt(t time.Time) *OrderUpdate {
+	ou.mutation.SetCompleteAt(t)
+	return ou
+}
+
+// SetNillableCompleteAt sets the complete_at field if the given value is not nil.
+func (ou *OrderUpdate) SetNillableCompleteAt(t *time.Time) *OrderUpdate {
+	if t != nil {
+		ou.SetCompleteAt(*t)
+	}
+	return ou
+}
+
+// ClearCompleteAt clears the value of complete_at.
+func (ou *OrderUpdate) ClearCompleteAt() *OrderUpdate {
+	ou.mutation.ClearCompleteAt()
+	return ou
+}
+
+// SetWhoID sets the who edge to User by id.
+func (ou *OrderUpdate) SetWhoID(id int) *OrderUpdate {
+	ou.mutation.SetWhoID(id)
+	return ou
+}
+
+// SetWho sets the who edge to User.
+func (ou *OrderUpdate) SetWho(u *User) *OrderUpdate {
+	return ou.SetWhoID(u.ID)
+}
+
+// SetWhereID sets the where edge to Restaurant by id.
+func (ou *OrderUpdate) SetWhereID(id int) *OrderUpdate {
+	ou.mutation.SetWhereID(id)
+	return ou
+}
+
+// SetWhere sets the where edge to Restaurant.
+func (ou *OrderUpdate) SetWhere(r *Restaurant) *OrderUpdate {
+	return ou.SetWhereID(r.ID)
 }
 
 // AddItemIDs adds the items edge to OrderField by ids.
@@ -72,20 +143,21 @@ func (ou *OrderUpdate) AddItems(o ...*OrderField) *OrderUpdate {
 	return ou.AddItemIDs(ids...)
 }
 
-// SetWhoID sets the who edge to User by id.
-func (ou *OrderUpdate) SetWhoID(id int) *OrderUpdate {
-	ou.mutation.SetWhoID(id)
-	return ou
-}
-
-// SetWho sets the who edge to User.
-func (ou *OrderUpdate) SetWho(u *User) *OrderUpdate {
-	return ou.SetWhoID(u.ID)
-}
-
 // Mutation returns the OrderMutation object of the builder.
 func (ou *OrderUpdate) Mutation() *OrderMutation {
 	return ou.mutation
+}
+
+// ClearWho clears the "who" edge to type User.
+func (ou *OrderUpdate) ClearWho() *OrderUpdate {
+	ou.mutation.ClearWho()
+	return ou
+}
+
+// ClearWhere clears the "where" edge to type Restaurant.
+func (ou *OrderUpdate) ClearWhere() *OrderUpdate {
+	ou.mutation.ClearWhere()
+	return ou
 }
 
 // ClearItems clears all "items" edges to type OrderField.
@@ -107,12 +179,6 @@ func (ou *OrderUpdate) RemoveItems(o ...*OrderField) *OrderUpdate {
 		ids[i] = o[i].ID
 	}
 	return ou.RemoveItemIDs(ids...)
-}
-
-// ClearWho clears the "who" edge to type User.
-func (ou *OrderUpdate) ClearWho() *OrderUpdate {
-	ou.mutation.ClearWho()
-	return ou
 }
 
 // Save executes the query and returns the number of rows/vertices matched by this operation.
@@ -177,6 +243,9 @@ func (ou *OrderUpdate) check() error {
 	if _, ok := ou.mutation.WhoID(); ou.mutation.WhoCleared() && !ok {
 		return errors.New("ent: clearing a required unique edge \"who\"")
 	}
+	if _, ok := ou.mutation.WhereID(); ou.mutation.WhereCleared() && !ok {
+		return errors.New("ent: clearing a required unique edge \"where\"")
+	}
 	return nil
 }
 
@@ -205,19 +274,114 @@ func (ou *OrderUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: order.FieldOrderAt,
 		})
 	}
-	if value, ok := ou.mutation.DeliveryAt(); ok {
+	if value, ok := ou.mutation.CookingAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: order.FieldDeliveryAt,
+			Column: order.FieldCookingAt,
 		})
 	}
-	if value, ok := ou.mutation.ArriveAt(); ok {
+	if ou.mutation.CookingAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Column: order.FieldCookingAt,
+		})
+	}
+	if value, ok := ou.mutation.DeliverAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: order.FieldArriveAt,
+			Column: order.FieldDeliverAt,
 		})
+	}
+	if ou.mutation.DeliverAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Column: order.FieldDeliverAt,
+		})
+	}
+	if value, ok := ou.mutation.CompleteAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: order.FieldCompleteAt,
+		})
+	}
+	if ou.mutation.CompleteAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Column: order.FieldCompleteAt,
+		})
+	}
+	if ou.mutation.WhoCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   order.WhoTable,
+			Columns: []string{order.WhoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ou.mutation.WhoIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   order.WhoTable,
+			Columns: []string{order.WhoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ou.mutation.WhereCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   order.WhereTable,
+			Columns: []string{order.WhereColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: restaurant.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ou.mutation.WhereIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   order.WhereTable,
+			Columns: []string{order.WhereColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: restaurant.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if ou.mutation.ItemsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -273,41 +437,6 @@ func (ou *OrderUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if ou.mutation.WhoCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   order.WhoTable,
-			Columns: []string{order.WhoColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: user.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ou.mutation.WhoIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   order.WhoTable,
-			Columns: []string{order.WhoColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: user.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ou.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{order.Label}
@@ -340,16 +469,86 @@ func (ouo *OrderUpdateOne) SetNillableOrderAt(t *time.Time) *OrderUpdateOne {
 	return ouo
 }
 
-// SetDeliveryAt sets the delivery_at field.
-func (ouo *OrderUpdateOne) SetDeliveryAt(t time.Time) *OrderUpdateOne {
-	ouo.mutation.SetDeliveryAt(t)
+// SetCookingAt sets the cooking_at field.
+func (ouo *OrderUpdateOne) SetCookingAt(t time.Time) *OrderUpdateOne {
+	ouo.mutation.SetCookingAt(t)
 	return ouo
 }
 
-// SetArriveAt sets the arrive_at field.
-func (ouo *OrderUpdateOne) SetArriveAt(t time.Time) *OrderUpdateOne {
-	ouo.mutation.SetArriveAt(t)
+// SetNillableCookingAt sets the cooking_at field if the given value is not nil.
+func (ouo *OrderUpdateOne) SetNillableCookingAt(t *time.Time) *OrderUpdateOne {
+	if t != nil {
+		ouo.SetCookingAt(*t)
+	}
 	return ouo
+}
+
+// ClearCookingAt clears the value of cooking_at.
+func (ouo *OrderUpdateOne) ClearCookingAt() *OrderUpdateOne {
+	ouo.mutation.ClearCookingAt()
+	return ouo
+}
+
+// SetDeliverAt sets the deliver_at field.
+func (ouo *OrderUpdateOne) SetDeliverAt(t time.Time) *OrderUpdateOne {
+	ouo.mutation.SetDeliverAt(t)
+	return ouo
+}
+
+// SetNillableDeliverAt sets the deliver_at field if the given value is not nil.
+func (ouo *OrderUpdateOne) SetNillableDeliverAt(t *time.Time) *OrderUpdateOne {
+	if t != nil {
+		ouo.SetDeliverAt(*t)
+	}
+	return ouo
+}
+
+// ClearDeliverAt clears the value of deliver_at.
+func (ouo *OrderUpdateOne) ClearDeliverAt() *OrderUpdateOne {
+	ouo.mutation.ClearDeliverAt()
+	return ouo
+}
+
+// SetCompleteAt sets the complete_at field.
+func (ouo *OrderUpdateOne) SetCompleteAt(t time.Time) *OrderUpdateOne {
+	ouo.mutation.SetCompleteAt(t)
+	return ouo
+}
+
+// SetNillableCompleteAt sets the complete_at field if the given value is not nil.
+func (ouo *OrderUpdateOne) SetNillableCompleteAt(t *time.Time) *OrderUpdateOne {
+	if t != nil {
+		ouo.SetCompleteAt(*t)
+	}
+	return ouo
+}
+
+// ClearCompleteAt clears the value of complete_at.
+func (ouo *OrderUpdateOne) ClearCompleteAt() *OrderUpdateOne {
+	ouo.mutation.ClearCompleteAt()
+	return ouo
+}
+
+// SetWhoID sets the who edge to User by id.
+func (ouo *OrderUpdateOne) SetWhoID(id int) *OrderUpdateOne {
+	ouo.mutation.SetWhoID(id)
+	return ouo
+}
+
+// SetWho sets the who edge to User.
+func (ouo *OrderUpdateOne) SetWho(u *User) *OrderUpdateOne {
+	return ouo.SetWhoID(u.ID)
+}
+
+// SetWhereID sets the where edge to Restaurant by id.
+func (ouo *OrderUpdateOne) SetWhereID(id int) *OrderUpdateOne {
+	ouo.mutation.SetWhereID(id)
+	return ouo
+}
+
+// SetWhere sets the where edge to Restaurant.
+func (ouo *OrderUpdateOne) SetWhere(r *Restaurant) *OrderUpdateOne {
+	return ouo.SetWhereID(r.ID)
 }
 
 // AddItemIDs adds the items edge to OrderField by ids.
@@ -367,20 +566,21 @@ func (ouo *OrderUpdateOne) AddItems(o ...*OrderField) *OrderUpdateOne {
 	return ouo.AddItemIDs(ids...)
 }
 
-// SetWhoID sets the who edge to User by id.
-func (ouo *OrderUpdateOne) SetWhoID(id int) *OrderUpdateOne {
-	ouo.mutation.SetWhoID(id)
-	return ouo
-}
-
-// SetWho sets the who edge to User.
-func (ouo *OrderUpdateOne) SetWho(u *User) *OrderUpdateOne {
-	return ouo.SetWhoID(u.ID)
-}
-
 // Mutation returns the OrderMutation object of the builder.
 func (ouo *OrderUpdateOne) Mutation() *OrderMutation {
 	return ouo.mutation
+}
+
+// ClearWho clears the "who" edge to type User.
+func (ouo *OrderUpdateOne) ClearWho() *OrderUpdateOne {
+	ouo.mutation.ClearWho()
+	return ouo
+}
+
+// ClearWhere clears the "where" edge to type Restaurant.
+func (ouo *OrderUpdateOne) ClearWhere() *OrderUpdateOne {
+	ouo.mutation.ClearWhere()
+	return ouo
 }
 
 // ClearItems clears all "items" edges to type OrderField.
@@ -402,12 +602,6 @@ func (ouo *OrderUpdateOne) RemoveItems(o ...*OrderField) *OrderUpdateOne {
 		ids[i] = o[i].ID
 	}
 	return ouo.RemoveItemIDs(ids...)
-}
-
-// ClearWho clears the "who" edge to type User.
-func (ouo *OrderUpdateOne) ClearWho() *OrderUpdateOne {
-	ouo.mutation.ClearWho()
-	return ouo
 }
 
 // Save executes the query and returns the updated entity.
@@ -472,6 +666,9 @@ func (ouo *OrderUpdateOne) check() error {
 	if _, ok := ouo.mutation.WhoID(); ouo.mutation.WhoCleared() && !ok {
 		return errors.New("ent: clearing a required unique edge \"who\"")
 	}
+	if _, ok := ouo.mutation.WhereID(); ouo.mutation.WhereCleared() && !ok {
+		return errors.New("ent: clearing a required unique edge \"where\"")
+	}
 	return nil
 }
 
@@ -498,19 +695,114 @@ func (ouo *OrderUpdateOne) sqlSave(ctx context.Context) (_node *Order, err error
 			Column: order.FieldOrderAt,
 		})
 	}
-	if value, ok := ouo.mutation.DeliveryAt(); ok {
+	if value, ok := ouo.mutation.CookingAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: order.FieldDeliveryAt,
+			Column: order.FieldCookingAt,
 		})
 	}
-	if value, ok := ouo.mutation.ArriveAt(); ok {
+	if ouo.mutation.CookingAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Column: order.FieldCookingAt,
+		})
+	}
+	if value, ok := ouo.mutation.DeliverAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: order.FieldArriveAt,
+			Column: order.FieldDeliverAt,
 		})
+	}
+	if ouo.mutation.DeliverAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Column: order.FieldDeliverAt,
+		})
+	}
+	if value, ok := ouo.mutation.CompleteAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: order.FieldCompleteAt,
+		})
+	}
+	if ouo.mutation.CompleteAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Column: order.FieldCompleteAt,
+		})
+	}
+	if ouo.mutation.WhoCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   order.WhoTable,
+			Columns: []string{order.WhoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ouo.mutation.WhoIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   order.WhoTable,
+			Columns: []string{order.WhoColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ouo.mutation.WhereCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   order.WhereTable,
+			Columns: []string{order.WhereColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: restaurant.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ouo.mutation.WhereIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   order.WhereTable,
+			Columns: []string{order.WhereColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: restaurant.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if ouo.mutation.ItemsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -558,41 +850,6 @@ func (ouo *OrderUpdateOne) sqlSave(ctx context.Context) (_node *Order, err error
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: orderfield.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if ouo.mutation.WhoCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   order.WhoTable,
-			Columns: []string{order.WhoColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: user.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := ouo.mutation.WhoIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2O,
-			Inverse: false,
-			Table:   order.WhoTable,
-			Columns: []string{order.WhoColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: user.FieldID,
 				},
 			},
 		}

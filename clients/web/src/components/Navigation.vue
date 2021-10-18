@@ -90,15 +90,15 @@
               height="52"
           >
             <v-tabs-slider/>
-            <v-tab>
+            <v-tab to="/search">
               {{ $t('nav.search') }}
               <v-icon>mdi-magnify</v-icon>
             </v-tab>
-            <v-tab>
-              {{ $t('nav.favorite') }}
+            <v-tab to="/my">
+              {{ $t('nav.my_restaurant') }}
               <v-icon>mdi-star</v-icon>
             </v-tab>
-            <v-tab>
+            <v-tab to="/history">
               {{ $t('nav.history') }}
               <v-icon>mdi-history</v-icon>
             </v-tab>

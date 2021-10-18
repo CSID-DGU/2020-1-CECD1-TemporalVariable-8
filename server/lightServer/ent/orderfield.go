@@ -4,6 +4,7 @@ package ent
 
 import (
 	"fmt"
+	"lightServer/ent/menu"
 	"lightServer/ent/orderfield"
 	"strings"
 
@@ -19,23 +20,29 @@ type OrderField struct {
 	Count uint16 `json:"count,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the OrderFieldQuery when eager-loading is set.
-	Edges       OrderFieldEdges `json:"edges"`
-	order_items *int
+	Edges            OrderFieldEdges `json:"edges"`
+	order_items      *int
+	order_field_menu *int
 }
 
 // OrderFieldEdges holds the relations/edges for other nodes in the graph.
 type OrderFieldEdges struct {
 	// Menu holds the value of the menu edge.
-	Menu []*Menu
+	Menu *Menu
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
 // MenuOrErr returns the Menu value or an error if the edge
-// was not loaded in eager-loading.
-func (e OrderFieldEdges) MenuOrErr() ([]*Menu, error) {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e OrderFieldEdges) MenuOrErr() (*Menu, error) {
 	if e.loadedTypes[0] {
+		if e.Menu == nil {
+			// The edge menu was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: menu.Label}
+		}
 		return e.Menu, nil
 	}
 	return nil, &NotLoadedError{edge: "menu"}
@@ -53,6 +60,7 @@ func (*OrderField) scanValues() []interface{} {
 func (*OrderField) fkValues() []interface{} {
 	return []interface{}{
 		&sql.NullInt64{}, // order_items
+		&sql.NullInt64{}, // order_field_menu
 	}
 }
 
@@ -80,6 +88,12 @@ func (of *OrderField) assignValues(values ...interface{}) error {
 		} else if value.Valid {
 			of.order_items = new(int)
 			*of.order_items = int(value.Int64)
+		}
+		if value, ok := values[1].(*sql.NullInt64); !ok {
+			return fmt.Errorf("unexpected type %T for edge-field order_field_menu", value)
+		} else if value.Valid {
+			of.order_field_menu = new(int)
+			*of.order_field_menu = int(value.Int64)
 		}
 	}
 	return nil

@@ -10,12 +10,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/hashicorp/go-multierror"
+	"github.com/tidwall/gjson"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"lightServer/ent"
+	"lightServer/ent/authorize"
 	"lightServer/mig/migc"
+	"math/big"
 	"net"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -30,8 +34,14 @@ type (
 		DefaultDBTimeout      time.Duration
 		DefaultSessionTimeout time.Duration
 		// Static
-		// 서비스 시작시 callback 등록이 이뤄짐
-		oauth2 map[string]*oauth2.Config
+		oauth2 map[string]*oauth2Config
+		guest *ent.User
+		url *url.URL
+	}
+	oauth2Config struct {
+		conf       *oauth2.Config
+		provider   authorize.Provider
+		getProfile func(client *http.Client) (gjson.Result, error)
 	}
 	unsafeServer struct {
 		DB              *ent.Client       // ent로 연결된 데이터베이스
@@ -109,6 +119,47 @@ func (s *MakItGo) Run() error {
 
 	return s.Unsafe.HTTPServer.Serve(s.Unsafe.Net)
 }
+
+func (s *MakItGo) Sync() error{
+	count, err := s.Unsafe.Contract.ListURLCount(nil)
+	if err != nil {
+		return err
+	}
+	s.Unsafe.Logger.Info("[ MakItGo ]", zap.String("message", "맛잇고 동기화 시작"))
+	for i := 0; i < int(count); i++ {
+		u, err := s.Unsafe.Contract.Urls(nil, big.NewInt(int64(i)))
+		s.Unsafe.Logger.Warn("[ MakItGo ]",
+			zap.String("message", "URL 감지"),
+			zap.String("url", u))
+		if err != nil {
+			return err
+		}
+
+	}
+	s.Unsafe.Logger.Info("[ MakItGo ]", zap.String("message", "맛잇고 동기화 완료"))
+
+	return nil
+}
+func (s *MakItGo) DebugString() {
+	s.Unsafe.Logger.Info("[ MakItGo ]", zap.String("message", "맛잇고 동기화 시작"))
+	s.Unsafe.Logger.Warn("[ MakItGo ]", zap.String("message", "'192.168.0.8' 감지"))
+	//time.Sleep(400 * time.Millisecond)
+	//s.Unsafe.Logger.Warn("[ MakItGo ]", zap.String("message", "'/동국반점' 감지"))
+	//time.Sleep(100 * time.Millisecond)
+	//s.Unsafe.Logger.Warn("[ MakItGo ]", zap.String("message", "'/동국반점' 동기화"), zap.Int("메뉴 동기화", 3))
+	//s.Unsafe.Logger.Warn("[ MakItGo ]", zap.String("message", "'/동국반점/충무로점' 감지"))
+	//time.Sleep(120 * time.Millisecond)
+	//s.Unsafe.Logger.Warn("[ MakItGo ]", zap.String("message", "'/동국반점/충무로점' 동기화"), zap.Int("메뉴 동기화", 4))
+	time.Sleep(600 * time.Millisecond)
+	s.Unsafe.Logger.Info("[ MakItGo ]", zap.String("message", "맛잇고 동기화 완료"))
+}
+func (s *MakItGo) DebugString2() {
+	s.Unsafe.Logger.Info("[ MakItGo ]", zap.String("message", "맛잇고 동기화 시작"))
+	s.Unsafe.Logger.Warn("[ MakItGo ]", zap.String("message", "'/동국반점' 공개됨"))
+	s.Unsafe.Logger.Warn("[ MakItGo ]", zap.String("message", "'/동국반점/충무로점' 공개됨"))
+	s.Unsafe.Logger.Info("[ MakItGo ]", zap.String("message", "맛잇고 동기화 완료"))
+}
+
 
 func (s *MakItGo) RunChannel(c chan error) <-chan error {
 	go func() {

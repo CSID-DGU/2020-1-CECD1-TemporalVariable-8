@@ -7,6 +7,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"lightServer/ent/category"
 	"lightServer/ent/file"
 	"lightServer/ent/menu"
 	"lightServer/ent/predicate"
@@ -27,10 +28,11 @@ type MenuQuery struct {
 	unique     []string
 	predicates []predicate.Menu
 	// eager-loading edges.
-	withOwner   *RestaurantQuery
-	withImages  *FileQuery
-	withOptions *MenuQuery
-	withFKs     bool
+	withOwner    *RestaurantQuery
+	withCategory *CategoryQuery
+	withImages   *FileQuery
+	withOptions  *MenuQuery
+	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -82,6 +84,28 @@ func (mq *MenuQuery) QueryOwner() *RestaurantQuery {
 	return query
 }
 
+// QueryCategory chains the current query on the category edge.
+func (mq *MenuQuery) QueryCategory() *CategoryQuery {
+	query := &CategoryQuery{config: mq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := mq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := mq.sqlQuery()
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(menu.Table, menu.FieldID, selector),
+			sqlgraph.To(category.Table, category.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, menu.CategoryTable, menu.CategoryPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
 // QueryImages chains the current query on the images edge.
 func (mq *MenuQuery) QueryImages() *FileQuery {
 	query := &FileQuery{config: mq.config}
@@ -96,7 +120,7 @@ func (mq *MenuQuery) QueryImages() *FileQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(menu.Table, menu.FieldID, selector),
 			sqlgraph.To(file.Table, file.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, menu.ImagesTable, menu.ImagesColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, menu.ImagesTable, menu.ImagesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(mq.driver.Dialect(), step)
 		return fromU, nil
@@ -316,6 +340,17 @@ func (mq *MenuQuery) WithOwner(opts ...func(*RestaurantQuery)) *MenuQuery {
 	return mq
 }
 
+//  WithCategory tells the query-builder to eager-loads the nodes that are connected to
+// the "category" edge. The optional arguments used to configure the query builder of the edge.
+func (mq *MenuQuery) WithCategory(opts ...func(*CategoryQuery)) *MenuQuery {
+	query := &CategoryQuery{config: mq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	mq.withCategory = query
+	return mq
+}
+
 //  WithImages tells the query-builder to eager-loads the nodes that are connected to
 // the "images" edge. The optional arguments used to configure the query builder of the edge.
 func (mq *MenuQuery) WithImages(opts ...func(*FileQuery)) *MenuQuery {
@@ -405,13 +440,14 @@ func (mq *MenuQuery) sqlAll(ctx context.Context) ([]*Menu, error) {
 		nodes       = []*Menu{}
 		withFKs     = mq.withFKs
 		_spec       = mq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			mq.withOwner != nil,
+			mq.withCategory != nil,
 			mq.withImages != nil,
 			mq.withOptions != nil,
 		}
 	)
-	if mq.withOwner != nil {
+	if mq.withOwner != nil || mq.withImages != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -466,31 +502,91 @@ func (mq *MenuQuery) sqlAll(ctx context.Context) ([]*Menu, error) {
 		}
 	}
 
-	if query := mq.withImages; query != nil {
+	if query := mq.withCategory; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
-		nodeids := make(map[int]*Menu)
-		for i := range nodes {
-			fks = append(fks, nodes[i].ID)
-			nodeids[nodes[i].ID] = nodes[i]
+		ids := make(map[int]*Menu, len(nodes))
+		for _, node := range nodes {
+			ids[node.ID] = node
+			fks = append(fks, node.ID)
 		}
-		query.withFKs = true
-		query.Where(predicate.File(func(s *sql.Selector) {
-			s.Where(sql.InValues(menu.ImagesColumn, fks...))
-		}))
+		var (
+			edgeids []int
+			edges   = make(map[int][]*Menu)
+		)
+		_spec := &sqlgraph.EdgeQuerySpec{
+			Edge: &sqlgraph.EdgeSpec{
+				Inverse: true,
+				Table:   menu.CategoryTable,
+				Columns: menu.CategoryPrimaryKey,
+			},
+			Predicate: func(s *sql.Selector) {
+				s.Where(sql.InValues(menu.CategoryPrimaryKey[1], fks...))
+			},
+
+			ScanValues: func() [2]interface{} {
+				return [2]interface{}{&sql.NullInt64{}, &sql.NullInt64{}}
+			},
+			Assign: func(out, in interface{}) error {
+				eout, ok := out.(*sql.NullInt64)
+				if !ok || eout == nil {
+					return fmt.Errorf("unexpected id value for edge-out")
+				}
+				ein, ok := in.(*sql.NullInt64)
+				if !ok || ein == nil {
+					return fmt.Errorf("unexpected id value for edge-in")
+				}
+				outValue := int(eout.Int64)
+				inValue := int(ein.Int64)
+				node, ok := ids[outValue]
+				if !ok {
+					return fmt.Errorf("unexpected node id in edges: %v", outValue)
+				}
+				edgeids = append(edgeids, inValue)
+				edges[inValue] = append(edges[inValue], node)
+				return nil
+			},
+		}
+		if err := sqlgraph.QueryEdges(ctx, mq.driver, _spec); err != nil {
+			return nil, fmt.Errorf(`query edges "category": %v`, err)
+		}
+		query.Where(category.IDIn(edgeids...))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			fk := n.menu_images
-			if fk == nil {
-				return nil, fmt.Errorf(`foreign-key "menu_images" is nil for node %v`, n.ID)
-			}
-			node, ok := nodeids[*fk]
+			nodes, ok := edges[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "menu_images" returned %v for node %v`, *fk, n.ID)
+				return nil, fmt.Errorf(`unexpected "category" node returned %v`, n.ID)
 			}
-			node.Edges.Images = append(node.Edges.Images, n)
+			for i := range nodes {
+				nodes[i].Edges.Category = append(nodes[i].Edges.Category, n)
+			}
+		}
+	}
+
+	if query := mq.withImages; query != nil {
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Menu)
+		for i := range nodes {
+			if fk := nodes[i].menu_images; fk != nil {
+				ids = append(ids, *fk)
+				nodeids[*fk] = append(nodeids[*fk], nodes[i])
+			}
+		}
+		query.Where(file.IDIn(ids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := nodeids[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "menu_images" returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Images = n
+			}
 		}
 	}
 

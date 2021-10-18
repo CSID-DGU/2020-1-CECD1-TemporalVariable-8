@@ -17,6 +17,7 @@ func (Menu) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("name").NotEmpty(),
 		field.String("description"),
+		field.Bool("isOption"),
 		field.JSON("price", new(money.Money)).Optional(),
 	}
 }
@@ -25,7 +26,8 @@ func (Menu) Fields() []ent.Field {
 func (Menu) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("owner", Restaurant.Type).Required().Unique(),
-		edge.To("images", File.Type),
+		edge.From("category", Category.Type).Ref("menus"),
+		edge.To("images", File.Type).Unique(),
 		edge.To("options", Menu.Type),
 	}
 }

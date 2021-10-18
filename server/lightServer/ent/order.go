@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"lightServer/ent/order"
+	"lightServer/ent/restaurant"
 	"lightServer/ent/user"
 	"strings"
 	"time"
@@ -19,40 +20,36 @@ type Order struct {
 	ID int `json:"id,omitempty"`
 	// OrderAt holds the value of the "order_at" field.
 	OrderAt time.Time `json:"order_at,omitempty"`
-	// DeliveryAt holds the value of the "delivery_at" field.
-	DeliveryAt time.Time `json:"delivery_at,omitempty"`
-	// ArriveAt holds the value of the "arrive_at" field.
-	ArriveAt time.Time `json:"arrive_at,omitempty"`
+	// CookingAt holds the value of the "cooking_at" field.
+	CookingAt *time.Time `json:"cooking_at,omitempty"`
+	// DeliverAt holds the value of the "deliver_at" field.
+	DeliverAt *time.Time `json:"deliver_at,omitempty"`
+	// CompleteAt holds the value of the "complete_at" field.
+	CompleteAt *time.Time `json:"complete_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the OrderQuery when eager-loading is set.
-	Edges     OrderEdges `json:"edges"`
-	order_who *int
+	Edges       OrderEdges `json:"edges"`
+	order_who   *int
+	order_where *int
 }
 
 // OrderEdges holds the relations/edges for other nodes in the graph.
 type OrderEdges struct {
-	// Items holds the value of the items edge.
-	Items []*OrderField
 	// Who holds the value of the who edge.
 	Who *User
+	// Where holds the value of the where edge.
+	Where *Restaurant
+	// Items holds the value of the items edge.
+	Items []*OrderField
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
-}
-
-// ItemsOrErr returns the Items value or an error if the edge
-// was not loaded in eager-loading.
-func (e OrderEdges) ItemsOrErr() ([]*OrderField, error) {
-	if e.loadedTypes[0] {
-		return e.Items, nil
-	}
-	return nil, &NotLoadedError{edge: "items"}
+	loadedTypes [3]bool
 }
 
 // WhoOrErr returns the Who value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e OrderEdges) WhoOrErr() (*User, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[0] {
 		if e.Who == nil {
 			// The edge who was loaded in eager-loading,
 			// but was not found.
@@ -63,13 +60,37 @@ func (e OrderEdges) WhoOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "who"}
 }
 
+// WhereOrErr returns the Where value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e OrderEdges) WhereOrErr() (*Restaurant, error) {
+	if e.loadedTypes[1] {
+		if e.Where == nil {
+			// The edge where was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: restaurant.Label}
+		}
+		return e.Where, nil
+	}
+	return nil, &NotLoadedError{edge: "where"}
+}
+
+// ItemsOrErr returns the Items value or an error if the edge
+// was not loaded in eager-loading.
+func (e OrderEdges) ItemsOrErr() ([]*OrderField, error) {
+	if e.loadedTypes[2] {
+		return e.Items, nil
+	}
+	return nil, &NotLoadedError{edge: "items"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Order) scanValues() []interface{} {
 	return []interface{}{
 		&sql.NullInt64{}, // id
 		&sql.NullTime{},  // order_at
-		&sql.NullTime{},  // delivery_at
-		&sql.NullTime{},  // arrive_at
+		&sql.NullTime{},  // cooking_at
+		&sql.NullTime{},  // deliver_at
+		&sql.NullTime{},  // complete_at
 	}
 }
 
@@ -77,6 +98,7 @@ func (*Order) scanValues() []interface{} {
 func (*Order) fkValues() []interface{} {
 	return []interface{}{
 		&sql.NullInt64{}, // order_who
+		&sql.NullInt64{}, // order_where
 	}
 }
 
@@ -98,16 +120,24 @@ func (o *Order) assignValues(values ...interface{}) error {
 		o.OrderAt = value.Time
 	}
 	if value, ok := values[1].(*sql.NullTime); !ok {
-		return fmt.Errorf("unexpected type %T for field delivery_at", values[1])
+		return fmt.Errorf("unexpected type %T for field cooking_at", values[1])
 	} else if value.Valid {
-		o.DeliveryAt = value.Time
+		o.CookingAt = new(time.Time)
+		*o.CookingAt = value.Time
 	}
 	if value, ok := values[2].(*sql.NullTime); !ok {
-		return fmt.Errorf("unexpected type %T for field arrive_at", values[2])
+		return fmt.Errorf("unexpected type %T for field deliver_at", values[2])
 	} else if value.Valid {
-		o.ArriveAt = value.Time
+		o.DeliverAt = new(time.Time)
+		*o.DeliverAt = value.Time
 	}
-	values = values[3:]
+	if value, ok := values[3].(*sql.NullTime); !ok {
+		return fmt.Errorf("unexpected type %T for field complete_at", values[3])
+	} else if value.Valid {
+		o.CompleteAt = new(time.Time)
+		*o.CompleteAt = value.Time
+	}
+	values = values[4:]
 	if len(values) == len(order.ForeignKeys) {
 		if value, ok := values[0].(*sql.NullInt64); !ok {
 			return fmt.Errorf("unexpected type %T for edge-field order_who", value)
@@ -115,18 +145,29 @@ func (o *Order) assignValues(values ...interface{}) error {
 			o.order_who = new(int)
 			*o.order_who = int(value.Int64)
 		}
+		if value, ok := values[1].(*sql.NullInt64); !ok {
+			return fmt.Errorf("unexpected type %T for edge-field order_where", value)
+		} else if value.Valid {
+			o.order_where = new(int)
+			*o.order_where = int(value.Int64)
+		}
 	}
 	return nil
-}
-
-// QueryItems queries the items edge of the Order.
-func (o *Order) QueryItems() *OrderFieldQuery {
-	return (&OrderClient{config: o.config}).QueryItems(o)
 }
 
 // QueryWho queries the who edge of the Order.
 func (o *Order) QueryWho() *UserQuery {
 	return (&OrderClient{config: o.config}).QueryWho(o)
+}
+
+// QueryWhere queries the where edge of the Order.
+func (o *Order) QueryWhere() *RestaurantQuery {
+	return (&OrderClient{config: o.config}).QueryWhere(o)
+}
+
+// QueryItems queries the items edge of the Order.
+func (o *Order) QueryItems() *OrderFieldQuery {
+	return (&OrderClient{config: o.config}).QueryItems(o)
 }
 
 // Update returns a builder for updating this Order.
@@ -154,10 +195,18 @@ func (o *Order) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v", o.ID))
 	builder.WriteString(", order_at=")
 	builder.WriteString(o.OrderAt.Format(time.ANSIC))
-	builder.WriteString(", delivery_at=")
-	builder.WriteString(o.DeliveryAt.Format(time.ANSIC))
-	builder.WriteString(", arrive_at=")
-	builder.WriteString(o.ArriveAt.Format(time.ANSIC))
+	if v := o.CookingAt; v != nil {
+		builder.WriteString(", cooking_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	if v := o.DeliverAt; v != nil {
+		builder.WriteString(", deliver_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	if v := o.CompleteAt; v != nil {
+		builder.WriteString(", complete_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

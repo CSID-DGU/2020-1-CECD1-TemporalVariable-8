@@ -99,10 +99,17 @@ func Name(v string) predicate.Restaurant {
 	})
 }
 
-// SubName applies equality check predicate on the "sub_name" field. It's identical to SubNameEQ.
-func SubName(v string) predicate.Restaurant {
+// Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
+func Description(v string) predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldSubName), v))
+		s.Where(sql.EQ(s.C(FieldDescription), v))
+	})
+}
+
+// URI applies equality check predicate on the "uri" field. It's identical to URIEQ.
+func URI(v string) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldURI), v))
 	})
 }
 
@@ -217,22 +224,22 @@ func NameContainsFold(v string) predicate.Restaurant {
 	})
 }
 
-// SubNameEQ applies the EQ predicate on the "sub_name" field.
-func SubNameEQ(v string) predicate.Restaurant {
+// DescriptionEQ applies the EQ predicate on the "description" field.
+func DescriptionEQ(v string) predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldSubName), v))
+		s.Where(sql.EQ(s.C(FieldDescription), v))
 	})
 }
 
-// SubNameNEQ applies the NEQ predicate on the "sub_name" field.
-func SubNameNEQ(v string) predicate.Restaurant {
+// DescriptionNEQ applies the NEQ predicate on the "description" field.
+func DescriptionNEQ(v string) predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldSubName), v))
+		s.Where(sql.NEQ(s.C(FieldDescription), v))
 	})
 }
 
-// SubNameIn applies the In predicate on the "sub_name" field.
-func SubNameIn(vs ...string) predicate.Restaurant {
+// DescriptionIn applies the In predicate on the "description" field.
+func DescriptionIn(vs ...string) predicate.Restaurant {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -244,12 +251,12 @@ func SubNameIn(vs ...string) predicate.Restaurant {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldSubName), v...))
+		s.Where(sql.In(s.C(FieldDescription), v...))
 	})
 }
 
-// SubNameNotIn applies the NotIn predicate on the "sub_name" field.
-func SubNameNotIn(vs ...string) predicate.Restaurant {
+// DescriptionNotIn applies the NotIn predicate on the "description" field.
+func DescriptionNotIn(vs ...string) predicate.Restaurant {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -261,84 +268,181 @@ func SubNameNotIn(vs ...string) predicate.Restaurant {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldSubName), v...))
+		s.Where(sql.NotIn(s.C(FieldDescription), v...))
 	})
 }
 
-// SubNameGT applies the GT predicate on the "sub_name" field.
-func SubNameGT(v string) predicate.Restaurant {
+// DescriptionGT applies the GT predicate on the "description" field.
+func DescriptionGT(v string) predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldSubName), v))
+		s.Where(sql.GT(s.C(FieldDescription), v))
 	})
 }
 
-// SubNameGTE applies the GTE predicate on the "sub_name" field.
-func SubNameGTE(v string) predicate.Restaurant {
+// DescriptionGTE applies the GTE predicate on the "description" field.
+func DescriptionGTE(v string) predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldSubName), v))
+		s.Where(sql.GTE(s.C(FieldDescription), v))
 	})
 }
 
-// SubNameLT applies the LT predicate on the "sub_name" field.
-func SubNameLT(v string) predicate.Restaurant {
+// DescriptionLT applies the LT predicate on the "description" field.
+func DescriptionLT(v string) predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldSubName), v))
+		s.Where(sql.LT(s.C(FieldDescription), v))
 	})
 }
 
-// SubNameLTE applies the LTE predicate on the "sub_name" field.
-func SubNameLTE(v string) predicate.Restaurant {
+// DescriptionLTE applies the LTE predicate on the "description" field.
+func DescriptionLTE(v string) predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldSubName), v))
+		s.Where(sql.LTE(s.C(FieldDescription), v))
 	})
 }
 
-// SubNameContains applies the Contains predicate on the "sub_name" field.
-func SubNameContains(v string) predicate.Restaurant {
+// DescriptionContains applies the Contains predicate on the "description" field.
+func DescriptionContains(v string) predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldSubName), v))
+		s.Where(sql.Contains(s.C(FieldDescription), v))
 	})
 }
 
-// SubNameHasPrefix applies the HasPrefix predicate on the "sub_name" field.
-func SubNameHasPrefix(v string) predicate.Restaurant {
+// DescriptionHasPrefix applies the HasPrefix predicate on the "description" field.
+func DescriptionHasPrefix(v string) predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldSubName), v))
+		s.Where(sql.HasPrefix(s.C(FieldDescription), v))
 	})
 }
 
-// SubNameHasSuffix applies the HasSuffix predicate on the "sub_name" field.
-func SubNameHasSuffix(v string) predicate.Restaurant {
+// DescriptionHasSuffix applies the HasSuffix predicate on the "description" field.
+func DescriptionHasSuffix(v string) predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldSubName), v))
+		s.Where(sql.HasSuffix(s.C(FieldDescription), v))
 	})
 }
 
-// SubNameIsNil applies the IsNil predicate on the "sub_name" field.
-func SubNameIsNil() predicate.Restaurant {
+// DescriptionIsNil applies the IsNil predicate on the "description" field.
+func DescriptionIsNil() predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldSubName)))
+		s.Where(sql.IsNull(s.C(FieldDescription)))
 	})
 }
 
-// SubNameNotNil applies the NotNil predicate on the "sub_name" field.
-func SubNameNotNil() predicate.Restaurant {
+// DescriptionNotNil applies the NotNil predicate on the "description" field.
+func DescriptionNotNil() predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldSubName)))
+		s.Where(sql.NotNull(s.C(FieldDescription)))
 	})
 }
 
-// SubNameEqualFold applies the EqualFold predicate on the "sub_name" field.
-func SubNameEqualFold(v string) predicate.Restaurant {
+// DescriptionEqualFold applies the EqualFold predicate on the "description" field.
+func DescriptionEqualFold(v string) predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldSubName), v))
+		s.Where(sql.EqualFold(s.C(FieldDescription), v))
 	})
 }
 
-// SubNameContainsFold applies the ContainsFold predicate on the "sub_name" field.
-func SubNameContainsFold(v string) predicate.Restaurant {
+// DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
+func DescriptionContainsFold(v string) predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldSubName), v))
+		s.Where(sql.ContainsFold(s.C(FieldDescription), v))
+	})
+}
+
+// URIEQ applies the EQ predicate on the "uri" field.
+func URIEQ(v string) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldURI), v))
+	})
+}
+
+// URINEQ applies the NEQ predicate on the "uri" field.
+func URINEQ(v string) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldURI), v))
+	})
+}
+
+// URIIn applies the In predicate on the "uri" field.
+func URIIn(vs ...string) predicate.Restaurant {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Restaurant(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldURI), v...))
+	})
+}
+
+// URINotIn applies the NotIn predicate on the "uri" field.
+func URINotIn(vs ...string) predicate.Restaurant {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Restaurant(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldURI), v...))
+	})
+}
+
+// URIGT applies the GT predicate on the "uri" field.
+func URIGT(v string) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldURI), v))
+	})
+}
+
+// URIGTE applies the GTE predicate on the "uri" field.
+func URIGTE(v string) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldURI), v))
+	})
+}
+
+// URILT applies the LT predicate on the "uri" field.
+func URILT(v string) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldURI), v))
+	})
+}
+
+// URILTE applies the LTE predicate on the "uri" field.
+func URILTE(v string) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldURI), v))
+	})
+}
+
+// URIContains applies the Contains predicate on the "uri" field.
+func URIContains(v string) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldURI), v))
+	})
+}
+
+// URIHasPrefix applies the HasPrefix predicate on the "uri" field.
+func URIHasPrefix(v string) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldURI), v))
+	})
+}
+
+// URIHasSuffix applies the HasSuffix predicate on the "uri" field.
+func URIHasSuffix(v string) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldURI), v))
 	})
 }
 
@@ -353,6 +457,48 @@ func URIIsNil() predicate.Restaurant {
 func URINotNil() predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
 		s.Where(sql.NotNull(s.C(FieldURI)))
+	})
+}
+
+// URIEqualFold applies the EqualFold predicate on the "uri" field.
+func URIEqualFold(v string) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldURI), v))
+	})
+}
+
+// URIContainsFold applies the ContainsFold predicate on the "uri" field.
+func URIContainsFold(v string) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldURI), v))
+	})
+}
+
+// HasOwner applies the HasEdge predicate on the "owner" edge.
+func HasOwner() predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(OwnerTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, OwnerTable, OwnerColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOwnerWith applies the HasEdge predicate on the "owner" edge with a given conditions (other predicates).
+func HasOwnerWith(preds ...predicate.User) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(OwnerInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, OwnerTable, OwnerColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
 	})
 }
 
@@ -487,6 +633,62 @@ func HasHistoriesWith(preds ...predicate.History) predicate.Restaurant {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(HistoriesInverseTable, FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, HistoriesTable, HistoriesPrimaryKey...),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCategories applies the HasEdge predicate on the "categories" edge.
+func HasCategories() predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(CategoriesTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, CategoriesTable, CategoriesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCategoriesWith applies the HasEdge predicate on the "categories" edge with a given conditions (other predicates).
+func HasCategoriesWith(preds ...predicate.Category) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(CategoriesInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, CategoriesTable, CategoriesColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasOrders applies the HasEdge predicate on the "orders" edge.
+func HasOrders() predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(OrdersTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, OrdersTable, OrdersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOrdersWith applies the HasEdge predicate on the "orders" edge with a given conditions (other predicates).
+func HasOrdersWith(preds ...predicate.Order) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(OrdersInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, OrdersTable, OrdersColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

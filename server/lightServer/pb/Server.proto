@@ -2,20 +2,23 @@ syntax = "proto3";
 
 package pb;
 
-message RestaurantStatistics { repeated string names = 1; }
+message RestaurantStatistics { repeated RestaurantName names = 1; }
+
+message RestaurantName { 
+  repeated string path = 1;
+  string url = 2;
+ }
 
 message Restaurant {
-  string name = 1;
-  string subName = 2;
+  RestaurantName name = 1;
+  string description = 2;
   string url = 3;
-
-  string root = 9;
-  string parent = 10;
-  repeated string children = 12;
+  string image = 4;
+  int64 id = 5;
 }
 
 message Menus {
-  string owner = 1;
+  RestaurantName owner = 1;
   repeated Menu menus = 2;
 }
 
@@ -25,12 +28,16 @@ message Menu {
   string description = 3;
   int64 priceAmount = 4;
   string currency = 5;
-  string owner = 6;
-  repeated Menu options = 7;
+  string image = 7;
+  repeated Menu options = 10;
+}
+message Categories {
+  RestaurantName owner = 1;
+  repeated string categories = 2;
 }
 
-message Auth { 
-  string provider = 1; 
+message Auth {
+  string provider = 1;
   string service_id = 2;
 }
 
@@ -40,17 +47,43 @@ message User {
   string address = 3;
 }
 message File {
-  string name =1;
+  string name = 1;
   string mime = 2;
   string create_at = 3;
   string url = 4;
 }
 
-message OrderField{
+message OrderField {
   int64 menu = 1;
   int32 count = 2;
+  string name = 3;
+  int64 amount = 4;
 }
+enum OrderState { Pending = 0; Cooking = 1; Deliver = 2; Complete = 3; }
 
 message Order {
-  repeated OrderField fields = 4;
+  RestaurantName where = 1;
+  string who = 2;
+  string order_at = 3;
+  string cooking_at = 4;
+  string deliver_at = 5;
+  string complete_at = 6;
+  OrderState state = 7;
+  int64 id = 8;
+  repeated OrderField purchased = 10;
+}
+
+message OrderResult { int64 order_id = 1; }
+
+message ManageCookingResult {
+  int64 order_id = 1;
+  string time_at = 2;
+}
+message ManageDelieverResult {
+  int64 order_id = 1;
+  string time_at = 2;
+}
+message ManageCompleteResult {
+  int64 order_id = 1;
+  string time_at = 2;
 }

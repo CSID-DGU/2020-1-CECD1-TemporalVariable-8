@@ -2,11 +2,11 @@ package mig
 
 import (
 	"encoding/json"
-	"golang.org/x/oauth2"
+	"lightServer/ent"
 )
 
 type Session struct {
-	Token *oauth2.Token `json:"token"`
+	Client *ent.User `json:"client"`
 }
 
 func (s *Session) UnmarshalBinary(data []byte) error {

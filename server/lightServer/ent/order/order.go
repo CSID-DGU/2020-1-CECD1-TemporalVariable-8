@@ -13,25 +13,22 @@ const (
 	FieldID = "id"
 	// FieldOrderAt holds the string denoting the order_at field in the database.
 	FieldOrderAt = "order_at"
-	// FieldDeliveryAt holds the string denoting the delivery_at field in the database.
-	FieldDeliveryAt = "delivery_at"
-	// FieldArriveAt holds the string denoting the arrive_at field in the database.
-	FieldArriveAt = "arrive_at"
+	// FieldCookingAt holds the string denoting the cooking_at field in the database.
+	FieldCookingAt = "cooking_at"
+	// FieldDeliverAt holds the string denoting the deliver_at field in the database.
+	FieldDeliverAt = "deliver_at"
+	// FieldCompleteAt holds the string denoting the complete_at field in the database.
+	FieldCompleteAt = "complete_at"
 
-	// EdgeItems holds the string denoting the items edge name in mutations.
-	EdgeItems = "items"
 	// EdgeWho holds the string denoting the who edge name in mutations.
 	EdgeWho = "who"
+	// EdgeWhere holds the string denoting the where edge name in mutations.
+	EdgeWhere = "where"
+	// EdgeItems holds the string denoting the items edge name in mutations.
+	EdgeItems = "items"
 
 	// Table holds the table name of the order in the database.
 	Table = "orders"
-	// ItemsTable is the table the holds the items relation/edge.
-	ItemsTable = "order_fields"
-	// ItemsInverseTable is the table name for the OrderField entity.
-	// It exists in this package in order to avoid circular dependency with the "orderfield" package.
-	ItemsInverseTable = "order_fields"
-	// ItemsColumn is the table column denoting the items relation/edge.
-	ItemsColumn = "order_items"
 	// WhoTable is the table the holds the who relation/edge.
 	WhoTable = "orders"
 	// WhoInverseTable is the table name for the User entity.
@@ -39,19 +36,35 @@ const (
 	WhoInverseTable = "users"
 	// WhoColumn is the table column denoting the who relation/edge.
 	WhoColumn = "order_who"
+	// WhereTable is the table the holds the where relation/edge.
+	WhereTable = "orders"
+	// WhereInverseTable is the table name for the Restaurant entity.
+	// It exists in this package in order to avoid circular dependency with the "restaurant" package.
+	WhereInverseTable = "restaurants"
+	// WhereColumn is the table column denoting the where relation/edge.
+	WhereColumn = "order_where"
+	// ItemsTable is the table the holds the items relation/edge.
+	ItemsTable = "order_fields"
+	// ItemsInverseTable is the table name for the OrderField entity.
+	// It exists in this package in order to avoid circular dependency with the "orderfield" package.
+	ItemsInverseTable = "order_fields"
+	// ItemsColumn is the table column denoting the items relation/edge.
+	ItemsColumn = "order_items"
 )
 
 // Columns holds all SQL columns for order fields.
 var Columns = []string{
 	FieldID,
 	FieldOrderAt,
-	FieldDeliveryAt,
-	FieldArriveAt,
+	FieldCookingAt,
+	FieldDeliverAt,
+	FieldCompleteAt,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the Order type.
 var ForeignKeys = []string{
 	"order_who",
+	"order_where",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

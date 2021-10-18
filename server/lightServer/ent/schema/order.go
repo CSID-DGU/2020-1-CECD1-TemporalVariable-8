@@ -16,16 +16,17 @@ type Order struct {
 func (Order) Fields() []ent.Field {
 	return []ent.Field{
 		field.Time("order_at").Default(time.Now),
-		field.Time("delivery_at"),
-		field.Time("arrive_at"),
-
+		field.Time("cooking_at").Optional().Nillable(),
+		field.Time("deliver_at").Optional().Nillable(),
+		field.Time("complete_at").Optional().Nillable(),
 	}
 }
 
 // Edges of the Order.
 func (Order) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("items", OrderField.Type),
 		edge.To("who", User.Type).Unique().Required(),
+		edge.To("where", Restaurant.Type).Unique().Required(),
+		edge.To("items", OrderField.Type),
 	}
 }

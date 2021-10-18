@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"lightServer/ent/order"
 	"lightServer/ent/orderfield"
+	"lightServer/ent/restaurant"
 	"lightServer/ent/user"
 	"time"
 
@@ -36,16 +37,68 @@ func (oc *OrderCreate) SetNillableOrderAt(t *time.Time) *OrderCreate {
 	return oc
 }
 
-// SetDeliveryAt sets the delivery_at field.
-func (oc *OrderCreate) SetDeliveryAt(t time.Time) *OrderCreate {
-	oc.mutation.SetDeliveryAt(t)
+// SetCookingAt sets the cooking_at field.
+func (oc *OrderCreate) SetCookingAt(t time.Time) *OrderCreate {
+	oc.mutation.SetCookingAt(t)
 	return oc
 }
 
-// SetArriveAt sets the arrive_at field.
-func (oc *OrderCreate) SetArriveAt(t time.Time) *OrderCreate {
-	oc.mutation.SetArriveAt(t)
+// SetNillableCookingAt sets the cooking_at field if the given value is not nil.
+func (oc *OrderCreate) SetNillableCookingAt(t *time.Time) *OrderCreate {
+	if t != nil {
+		oc.SetCookingAt(*t)
+	}
 	return oc
+}
+
+// SetDeliverAt sets the deliver_at field.
+func (oc *OrderCreate) SetDeliverAt(t time.Time) *OrderCreate {
+	oc.mutation.SetDeliverAt(t)
+	return oc
+}
+
+// SetNillableDeliverAt sets the deliver_at field if the given value is not nil.
+func (oc *OrderCreate) SetNillableDeliverAt(t *time.Time) *OrderCreate {
+	if t != nil {
+		oc.SetDeliverAt(*t)
+	}
+	return oc
+}
+
+// SetCompleteAt sets the complete_at field.
+func (oc *OrderCreate) SetCompleteAt(t time.Time) *OrderCreate {
+	oc.mutation.SetCompleteAt(t)
+	return oc
+}
+
+// SetNillableCompleteAt sets the complete_at field if the given value is not nil.
+func (oc *OrderCreate) SetNillableCompleteAt(t *time.Time) *OrderCreate {
+	if t != nil {
+		oc.SetCompleteAt(*t)
+	}
+	return oc
+}
+
+// SetWhoID sets the who edge to User by id.
+func (oc *OrderCreate) SetWhoID(id int) *OrderCreate {
+	oc.mutation.SetWhoID(id)
+	return oc
+}
+
+// SetWho sets the who edge to User.
+func (oc *OrderCreate) SetWho(u *User) *OrderCreate {
+	return oc.SetWhoID(u.ID)
+}
+
+// SetWhereID sets the where edge to Restaurant by id.
+func (oc *OrderCreate) SetWhereID(id int) *OrderCreate {
+	oc.mutation.SetWhereID(id)
+	return oc
+}
+
+// SetWhere sets the where edge to Restaurant.
+func (oc *OrderCreate) SetWhere(r *Restaurant) *OrderCreate {
+	return oc.SetWhereID(r.ID)
 }
 
 // AddItemIDs adds the items edge to OrderField by ids.
@@ -61,17 +114,6 @@ func (oc *OrderCreate) AddItems(o ...*OrderField) *OrderCreate {
 		ids[i] = o[i].ID
 	}
 	return oc.AddItemIDs(ids...)
-}
-
-// SetWhoID sets the who edge to User by id.
-func (oc *OrderCreate) SetWhoID(id int) *OrderCreate {
-	oc.mutation.SetWhoID(id)
-	return oc
-}
-
-// SetWho sets the who edge to User.
-func (oc *OrderCreate) SetWho(u *User) *OrderCreate {
-	return oc.SetWhoID(u.ID)
 }
 
 // Mutation returns the OrderMutation object of the builder.
@@ -137,14 +179,11 @@ func (oc *OrderCreate) check() error {
 	if _, ok := oc.mutation.OrderAt(); !ok {
 		return &ValidationError{Name: "order_at", err: errors.New("ent: missing required field \"order_at\"")}
 	}
-	if _, ok := oc.mutation.DeliveryAt(); !ok {
-		return &ValidationError{Name: "delivery_at", err: errors.New("ent: missing required field \"delivery_at\"")}
-	}
-	if _, ok := oc.mutation.ArriveAt(); !ok {
-		return &ValidationError{Name: "arrive_at", err: errors.New("ent: missing required field \"arrive_at\"")}
-	}
 	if _, ok := oc.mutation.WhoID(); !ok {
 		return &ValidationError{Name: "who", err: errors.New("ent: missing required edge \"who\"")}
+	}
+	if _, ok := oc.mutation.WhereID(); !ok {
+		return &ValidationError{Name: "where", err: errors.New("ent: missing required edge \"where\"")}
 	}
 	return nil
 }
@@ -181,40 +220,29 @@ func (oc *OrderCreate) createSpec() (*Order, *sqlgraph.CreateSpec) {
 		})
 		_node.OrderAt = value
 	}
-	if value, ok := oc.mutation.DeliveryAt(); ok {
+	if value, ok := oc.mutation.CookingAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: order.FieldDeliveryAt,
+			Column: order.FieldCookingAt,
 		})
-		_node.DeliveryAt = value
+		_node.CookingAt = &value
 	}
-	if value, ok := oc.mutation.ArriveAt(); ok {
+	if value, ok := oc.mutation.DeliverAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: order.FieldArriveAt,
+			Column: order.FieldDeliverAt,
 		})
-		_node.ArriveAt = value
+		_node.DeliverAt = &value
 	}
-	if nodes := oc.mutation.ItemsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   order.ItemsTable,
-			Columns: []string{order.ItemsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: orderfield.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
+	if value, ok := oc.mutation.CompleteAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: order.FieldCompleteAt,
+		})
+		_node.CompleteAt = &value
 	}
 	if nodes := oc.mutation.WhoIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -227,6 +255,44 @@ func (oc *OrderCreate) createSpec() (*Order, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := oc.mutation.WhereIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   order.WhereTable,
+			Columns: []string{order.WhereColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: restaurant.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := oc.mutation.ItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   order.ItemsTable,
+			Columns: []string{order.ItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: orderfield.FieldID,
 				},
 			},
 		}

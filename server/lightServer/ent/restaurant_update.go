@@ -5,12 +5,14 @@ package ent
 import (
 	"context"
 	"fmt"
+	"lightServer/ent/category"
 	"lightServer/ent/file"
 	"lightServer/ent/history"
 	"lightServer/ent/menu"
+	"lightServer/ent/order"
 	"lightServer/ent/predicate"
 	"lightServer/ent/restaurant"
-	"net/url"
+	"lightServer/ent/user"
 
 	"github.com/facebook/ent/dialect/sql"
 	"github.com/facebook/ent/dialect/sql/sqlgraph"
@@ -37,29 +39,37 @@ func (ru *RestaurantUpdate) SetName(s string) *RestaurantUpdate {
 	return ru
 }
 
-// SetSubName sets the sub_name field.
-func (ru *RestaurantUpdate) SetSubName(s string) *RestaurantUpdate {
-	ru.mutation.SetSubName(s)
+// SetDescription sets the description field.
+func (ru *RestaurantUpdate) SetDescription(s string) *RestaurantUpdate {
+	ru.mutation.SetDescription(s)
 	return ru
 }
 
-// SetNillableSubName sets the sub_name field if the given value is not nil.
-func (ru *RestaurantUpdate) SetNillableSubName(s *string) *RestaurantUpdate {
+// SetNillableDescription sets the description field if the given value is not nil.
+func (ru *RestaurantUpdate) SetNillableDescription(s *string) *RestaurantUpdate {
 	if s != nil {
-		ru.SetSubName(*s)
+		ru.SetDescription(*s)
 	}
 	return ru
 }
 
-// ClearSubName clears the value of sub_name.
-func (ru *RestaurantUpdate) ClearSubName() *RestaurantUpdate {
-	ru.mutation.ClearSubName()
+// ClearDescription clears the value of description.
+func (ru *RestaurantUpdate) ClearDescription() *RestaurantUpdate {
+	ru.mutation.ClearDescription()
 	return ru
 }
 
 // SetURI sets the uri field.
-func (ru *RestaurantUpdate) SetURI(u *url.URL) *RestaurantUpdate {
-	ru.mutation.SetURI(u)
+func (ru *RestaurantUpdate) SetURI(s string) *RestaurantUpdate {
+	ru.mutation.SetURI(s)
+	return ru
+}
+
+// SetNillableURI sets the uri field if the given value is not nil.
+func (ru *RestaurantUpdate) SetNillableURI(s *string) *RestaurantUpdate {
+	if s != nil {
+		ru.SetURI(*s)
+	}
 	return ru
 }
 
@@ -67,6 +77,25 @@ func (ru *RestaurantUpdate) SetURI(u *url.URL) *RestaurantUpdate {
 func (ru *RestaurantUpdate) ClearURI() *RestaurantUpdate {
 	ru.mutation.ClearURI()
 	return ru
+}
+
+// SetOwnerID sets the owner edge to User by id.
+func (ru *RestaurantUpdate) SetOwnerID(id int) *RestaurantUpdate {
+	ru.mutation.SetOwnerID(id)
+	return ru
+}
+
+// SetNillableOwnerID sets the owner edge to User by id if the given value is not nil.
+func (ru *RestaurantUpdate) SetNillableOwnerID(id *int) *RestaurantUpdate {
+	if id != nil {
+		ru = ru.SetOwnerID(*id)
+	}
+	return ru
+}
+
+// SetOwner sets the owner edge to User.
+func (ru *RestaurantUpdate) SetOwner(u *User) *RestaurantUpdate {
+	return ru.SetOwnerID(u.ID)
 }
 
 // SetAvatarID sets the avatar edge to File by id.
@@ -156,6 +185,36 @@ func (ru *RestaurantUpdate) AddHistories(h ...*History) *RestaurantUpdate {
 	return ru.AddHistoryIDs(ids...)
 }
 
+// AddCategoryIDs adds the categories edge to Category by ids.
+func (ru *RestaurantUpdate) AddCategoryIDs(ids ...int) *RestaurantUpdate {
+	ru.mutation.AddCategoryIDs(ids...)
+	return ru
+}
+
+// AddCategories adds the categories edges to Category.
+func (ru *RestaurantUpdate) AddCategories(c ...*Category) *RestaurantUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ru.AddCategoryIDs(ids...)
+}
+
+// AddOrderIDs adds the orders edge to Order by ids.
+func (ru *RestaurantUpdate) AddOrderIDs(ids ...int) *RestaurantUpdate {
+	ru.mutation.AddOrderIDs(ids...)
+	return ru
+}
+
+// AddOrders adds the orders edges to Order.
+func (ru *RestaurantUpdate) AddOrders(o ...*Order) *RestaurantUpdate {
+	ids := make([]int, len(o))
+	for i := range o {
+		ids[i] = o[i].ID
+	}
+	return ru.AddOrderIDs(ids...)
+}
+
 // AddMenuIDs adds the menus edge to Menu by ids.
 func (ru *RestaurantUpdate) AddMenuIDs(ids ...int) *RestaurantUpdate {
 	ru.mutation.AddMenuIDs(ids...)
@@ -174,6 +233,12 @@ func (ru *RestaurantUpdate) AddMenus(m ...*Menu) *RestaurantUpdate {
 // Mutation returns the RestaurantMutation object of the builder.
 func (ru *RestaurantUpdate) Mutation() *RestaurantMutation {
 	return ru.mutation
+}
+
+// ClearOwner clears the "owner" edge to type User.
+func (ru *RestaurantUpdate) ClearOwner() *RestaurantUpdate {
+	ru.mutation.ClearOwner()
+	return ru
 }
 
 // ClearAvatar clears the "avatar" edge to type File.
@@ -234,6 +299,48 @@ func (ru *RestaurantUpdate) RemoveHistories(h ...*History) *RestaurantUpdate {
 		ids[i] = h[i].ID
 	}
 	return ru.RemoveHistoryIDs(ids...)
+}
+
+// ClearCategories clears all "categories" edges to type Category.
+func (ru *RestaurantUpdate) ClearCategories() *RestaurantUpdate {
+	ru.mutation.ClearCategories()
+	return ru
+}
+
+// RemoveCategoryIDs removes the categories edge to Category by ids.
+func (ru *RestaurantUpdate) RemoveCategoryIDs(ids ...int) *RestaurantUpdate {
+	ru.mutation.RemoveCategoryIDs(ids...)
+	return ru
+}
+
+// RemoveCategories removes categories edges to Category.
+func (ru *RestaurantUpdate) RemoveCategories(c ...*Category) *RestaurantUpdate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ru.RemoveCategoryIDs(ids...)
+}
+
+// ClearOrders clears all "orders" edges to type Order.
+func (ru *RestaurantUpdate) ClearOrders() *RestaurantUpdate {
+	ru.mutation.ClearOrders()
+	return ru
+}
+
+// RemoveOrderIDs removes the orders edge to Order by ids.
+func (ru *RestaurantUpdate) RemoveOrderIDs(ids ...int) *RestaurantUpdate {
+	ru.mutation.RemoveOrderIDs(ids...)
+	return ru
+}
+
+// RemoveOrders removes orders edges to Order.
+func (ru *RestaurantUpdate) RemoveOrders(o ...*Order) *RestaurantUpdate {
+	ids := make([]int, len(o))
+	for i := range o {
+		ids[i] = o[i].ID
+	}
+	return ru.RemoveOrderIDs(ids...)
 }
 
 // ClearMenus clears all "menus" edges to type Menu.
@@ -349,31 +456,66 @@ func (ru *RestaurantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: restaurant.FieldName,
 		})
 	}
-	if value, ok := ru.mutation.SubName(); ok {
+	if value, ok := ru.mutation.Description(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: restaurant.FieldSubName,
+			Column: restaurant.FieldDescription,
 		})
 	}
-	if ru.mutation.SubNameCleared() {
+	if ru.mutation.DescriptionCleared() {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
-			Column: restaurant.FieldSubName,
+			Column: restaurant.FieldDescription,
 		})
 	}
 	if value, ok := ru.mutation.URI(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
+			Type:   field.TypeString,
 			Value:  value,
 			Column: restaurant.FieldURI,
 		})
 	}
 	if ru.mutation.URICleared() {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
+			Type:   field.TypeString,
 			Column: restaurant.FieldURI,
 		})
+	}
+	if ru.mutation.OwnerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   restaurant.OwnerTable,
+			Columns: []string{restaurant.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.OwnerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   restaurant.OwnerTable,
+			Columns: []string{restaurant.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if ru.mutation.AvatarCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -588,6 +730,114 @@ func (ru *RestaurantUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if ru.mutation.CategoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   restaurant.CategoriesTable,
+			Columns: []string{restaurant.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.RemovedCategoriesIDs(); len(nodes) > 0 && !ru.mutation.CategoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   restaurant.CategoriesTable,
+			Columns: []string{restaurant.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.CategoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   restaurant.CategoriesTable,
+			Columns: []string{restaurant.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ru.mutation.OrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   restaurant.OrdersTable,
+			Columns: []string{restaurant.OrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: order.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.RemovedOrdersIDs(); len(nodes) > 0 && !ru.mutation.OrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   restaurant.OrdersTable,
+			Columns: []string{restaurant.OrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: order.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.OrdersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   restaurant.OrdersTable,
+			Columns: []string{restaurant.OrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: order.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if ru.mutation.MenusCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -666,29 +916,37 @@ func (ruo *RestaurantUpdateOne) SetName(s string) *RestaurantUpdateOne {
 	return ruo
 }
 
-// SetSubName sets the sub_name field.
-func (ruo *RestaurantUpdateOne) SetSubName(s string) *RestaurantUpdateOne {
-	ruo.mutation.SetSubName(s)
+// SetDescription sets the description field.
+func (ruo *RestaurantUpdateOne) SetDescription(s string) *RestaurantUpdateOne {
+	ruo.mutation.SetDescription(s)
 	return ruo
 }
 
-// SetNillableSubName sets the sub_name field if the given value is not nil.
-func (ruo *RestaurantUpdateOne) SetNillableSubName(s *string) *RestaurantUpdateOne {
+// SetNillableDescription sets the description field if the given value is not nil.
+func (ruo *RestaurantUpdateOne) SetNillableDescription(s *string) *RestaurantUpdateOne {
 	if s != nil {
-		ruo.SetSubName(*s)
+		ruo.SetDescription(*s)
 	}
 	return ruo
 }
 
-// ClearSubName clears the value of sub_name.
-func (ruo *RestaurantUpdateOne) ClearSubName() *RestaurantUpdateOne {
-	ruo.mutation.ClearSubName()
+// ClearDescription clears the value of description.
+func (ruo *RestaurantUpdateOne) ClearDescription() *RestaurantUpdateOne {
+	ruo.mutation.ClearDescription()
 	return ruo
 }
 
 // SetURI sets the uri field.
-func (ruo *RestaurantUpdateOne) SetURI(u *url.URL) *RestaurantUpdateOne {
-	ruo.mutation.SetURI(u)
+func (ruo *RestaurantUpdateOne) SetURI(s string) *RestaurantUpdateOne {
+	ruo.mutation.SetURI(s)
+	return ruo
+}
+
+// SetNillableURI sets the uri field if the given value is not nil.
+func (ruo *RestaurantUpdateOne) SetNillableURI(s *string) *RestaurantUpdateOne {
+	if s != nil {
+		ruo.SetURI(*s)
+	}
 	return ruo
 }
 
@@ -696,6 +954,25 @@ func (ruo *RestaurantUpdateOne) SetURI(u *url.URL) *RestaurantUpdateOne {
 func (ruo *RestaurantUpdateOne) ClearURI() *RestaurantUpdateOne {
 	ruo.mutation.ClearURI()
 	return ruo
+}
+
+// SetOwnerID sets the owner edge to User by id.
+func (ruo *RestaurantUpdateOne) SetOwnerID(id int) *RestaurantUpdateOne {
+	ruo.mutation.SetOwnerID(id)
+	return ruo
+}
+
+// SetNillableOwnerID sets the owner edge to User by id if the given value is not nil.
+func (ruo *RestaurantUpdateOne) SetNillableOwnerID(id *int) *RestaurantUpdateOne {
+	if id != nil {
+		ruo = ruo.SetOwnerID(*id)
+	}
+	return ruo
+}
+
+// SetOwner sets the owner edge to User.
+func (ruo *RestaurantUpdateOne) SetOwner(u *User) *RestaurantUpdateOne {
+	return ruo.SetOwnerID(u.ID)
 }
 
 // SetAvatarID sets the avatar edge to File by id.
@@ -785,6 +1062,36 @@ func (ruo *RestaurantUpdateOne) AddHistories(h ...*History) *RestaurantUpdateOne
 	return ruo.AddHistoryIDs(ids...)
 }
 
+// AddCategoryIDs adds the categories edge to Category by ids.
+func (ruo *RestaurantUpdateOne) AddCategoryIDs(ids ...int) *RestaurantUpdateOne {
+	ruo.mutation.AddCategoryIDs(ids...)
+	return ruo
+}
+
+// AddCategories adds the categories edges to Category.
+func (ruo *RestaurantUpdateOne) AddCategories(c ...*Category) *RestaurantUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ruo.AddCategoryIDs(ids...)
+}
+
+// AddOrderIDs adds the orders edge to Order by ids.
+func (ruo *RestaurantUpdateOne) AddOrderIDs(ids ...int) *RestaurantUpdateOne {
+	ruo.mutation.AddOrderIDs(ids...)
+	return ruo
+}
+
+// AddOrders adds the orders edges to Order.
+func (ruo *RestaurantUpdateOne) AddOrders(o ...*Order) *RestaurantUpdateOne {
+	ids := make([]int, len(o))
+	for i := range o {
+		ids[i] = o[i].ID
+	}
+	return ruo.AddOrderIDs(ids...)
+}
+
 // AddMenuIDs adds the menus edge to Menu by ids.
 func (ruo *RestaurantUpdateOne) AddMenuIDs(ids ...int) *RestaurantUpdateOne {
 	ruo.mutation.AddMenuIDs(ids...)
@@ -803,6 +1110,12 @@ func (ruo *RestaurantUpdateOne) AddMenus(m ...*Menu) *RestaurantUpdateOne {
 // Mutation returns the RestaurantMutation object of the builder.
 func (ruo *RestaurantUpdateOne) Mutation() *RestaurantMutation {
 	return ruo.mutation
+}
+
+// ClearOwner clears the "owner" edge to type User.
+func (ruo *RestaurantUpdateOne) ClearOwner() *RestaurantUpdateOne {
+	ruo.mutation.ClearOwner()
+	return ruo
 }
 
 // ClearAvatar clears the "avatar" edge to type File.
@@ -863,6 +1176,48 @@ func (ruo *RestaurantUpdateOne) RemoveHistories(h ...*History) *RestaurantUpdate
 		ids[i] = h[i].ID
 	}
 	return ruo.RemoveHistoryIDs(ids...)
+}
+
+// ClearCategories clears all "categories" edges to type Category.
+func (ruo *RestaurantUpdateOne) ClearCategories() *RestaurantUpdateOne {
+	ruo.mutation.ClearCategories()
+	return ruo
+}
+
+// RemoveCategoryIDs removes the categories edge to Category by ids.
+func (ruo *RestaurantUpdateOne) RemoveCategoryIDs(ids ...int) *RestaurantUpdateOne {
+	ruo.mutation.RemoveCategoryIDs(ids...)
+	return ruo
+}
+
+// RemoveCategories removes categories edges to Category.
+func (ruo *RestaurantUpdateOne) RemoveCategories(c ...*Category) *RestaurantUpdateOne {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
+	}
+	return ruo.RemoveCategoryIDs(ids...)
+}
+
+// ClearOrders clears all "orders" edges to type Order.
+func (ruo *RestaurantUpdateOne) ClearOrders() *RestaurantUpdateOne {
+	ruo.mutation.ClearOrders()
+	return ruo
+}
+
+// RemoveOrderIDs removes the orders edge to Order by ids.
+func (ruo *RestaurantUpdateOne) RemoveOrderIDs(ids ...int) *RestaurantUpdateOne {
+	ruo.mutation.RemoveOrderIDs(ids...)
+	return ruo
+}
+
+// RemoveOrders removes orders edges to Order.
+func (ruo *RestaurantUpdateOne) RemoveOrders(o ...*Order) *RestaurantUpdateOne {
+	ids := make([]int, len(o))
+	for i := range o {
+		ids[i] = o[i].ID
+	}
+	return ruo.RemoveOrderIDs(ids...)
 }
 
 // ClearMenus clears all "menus" edges to type Menu.
@@ -976,31 +1331,66 @@ func (ruo *RestaurantUpdateOne) sqlSave(ctx context.Context) (_node *Restaurant,
 			Column: restaurant.FieldName,
 		})
 	}
-	if value, ok := ruo.mutation.SubName(); ok {
+	if value, ok := ruo.mutation.Description(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: restaurant.FieldSubName,
+			Column: restaurant.FieldDescription,
 		})
 	}
-	if ruo.mutation.SubNameCleared() {
+	if ruo.mutation.DescriptionCleared() {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
-			Column: restaurant.FieldSubName,
+			Column: restaurant.FieldDescription,
 		})
 	}
 	if value, ok := ruo.mutation.URI(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
+			Type:   field.TypeString,
 			Value:  value,
 			Column: restaurant.FieldURI,
 		})
 	}
 	if ruo.mutation.URICleared() {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
+			Type:   field.TypeString,
 			Column: restaurant.FieldURI,
 		})
+	}
+	if ruo.mutation.OwnerCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   restaurant.OwnerTable,
+			Columns: []string{restaurant.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.OwnerIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   restaurant.OwnerTable,
+			Columns: []string{restaurant.OwnerColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: user.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if ruo.mutation.AvatarCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1207,6 +1597,114 @@ func (ruo *RestaurantUpdateOne) sqlSave(ctx context.Context) (_node *Restaurant,
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: history.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ruo.mutation.CategoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   restaurant.CategoriesTable,
+			Columns: []string{restaurant.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.RemovedCategoriesIDs(); len(nodes) > 0 && !ruo.mutation.CategoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   restaurant.CategoriesTable,
+			Columns: []string{restaurant.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.CategoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   restaurant.CategoriesTable,
+			Columns: []string{restaurant.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ruo.mutation.OrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   restaurant.OrdersTable,
+			Columns: []string{restaurant.OrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: order.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.RemovedOrdersIDs(); len(nodes) > 0 && !ruo.mutation.OrdersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   restaurant.OrdersTable,
+			Columns: []string{restaurant.OrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: order.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.OrdersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   restaurant.OrdersTable,
+			Columns: []string{restaurant.OrdersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: order.FieldID,
 				},
 			},
 		}

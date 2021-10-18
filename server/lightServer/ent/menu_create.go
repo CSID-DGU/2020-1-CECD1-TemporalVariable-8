@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"lightServer/ent/category"
 	"lightServer/ent/file"
 	"lightServer/ent/menu"
 	"lightServer/ent/restaurant"
@@ -34,6 +35,12 @@ func (mc *MenuCreate) SetDescription(s string) *MenuCreate {
 	return mc
 }
 
+// SetIsOption sets the isOption field.
+func (mc *MenuCreate) SetIsOption(b bool) *MenuCreate {
+	mc.mutation.SetIsOption(b)
+	return mc
+}
+
 // SetPrice sets the price field.
 func (mc *MenuCreate) SetPrice(m *money.Money) *MenuCreate {
 	mc.mutation.SetPrice(m)
@@ -51,19 +58,38 @@ func (mc *MenuCreate) SetOwner(r *Restaurant) *MenuCreate {
 	return mc.SetOwnerID(r.ID)
 }
 
-// AddImageIDs adds the images edge to File by ids.
-func (mc *MenuCreate) AddImageIDs(ids ...int) *MenuCreate {
-	mc.mutation.AddImageIDs(ids...)
+// AddCategoryIDs adds the category edge to Category by ids.
+func (mc *MenuCreate) AddCategoryIDs(ids ...int) *MenuCreate {
+	mc.mutation.AddCategoryIDs(ids...)
 	return mc
 }
 
-// AddImages adds the images edges to File.
-func (mc *MenuCreate) AddImages(f ...*File) *MenuCreate {
-	ids := make([]int, len(f))
-	for i := range f {
-		ids[i] = f[i].ID
+// AddCategory adds the category edges to Category.
+func (mc *MenuCreate) AddCategory(c ...*Category) *MenuCreate {
+	ids := make([]int, len(c))
+	for i := range c {
+		ids[i] = c[i].ID
 	}
-	return mc.AddImageIDs(ids...)
+	return mc.AddCategoryIDs(ids...)
+}
+
+// SetImagesID sets the images edge to File by id.
+func (mc *MenuCreate) SetImagesID(id int) *MenuCreate {
+	mc.mutation.SetImagesID(id)
+	return mc
+}
+
+// SetNillableImagesID sets the images edge to File by id if the given value is not nil.
+func (mc *MenuCreate) SetNillableImagesID(id *int) *MenuCreate {
+	if id != nil {
+		mc = mc.SetImagesID(*id)
+	}
+	return mc
+}
+
+// SetImages sets the images edge to File.
+func (mc *MenuCreate) SetImages(f *File) *MenuCreate {
+	return mc.SetImagesID(f.ID)
 }
 
 // AddOptionIDs adds the options edge to Menu by ids.
@@ -143,6 +169,9 @@ func (mc *MenuCreate) check() error {
 	if _, ok := mc.mutation.Description(); !ok {
 		return &ValidationError{Name: "description", err: errors.New("ent: missing required field \"description\"")}
 	}
+	if _, ok := mc.mutation.IsOption(); !ok {
+		return &ValidationError{Name: "isOption", err: errors.New("ent: missing required field \"isOption\"")}
+	}
 	if _, ok := mc.mutation.OwnerID(); !ok {
 		return &ValidationError{Name: "owner", err: errors.New("ent: missing required edge \"owner\"")}
 	}
@@ -189,6 +218,14 @@ func (mc *MenuCreate) createSpec() (*Menu, *sqlgraph.CreateSpec) {
 		})
 		_node.Description = value
 	}
+	if value, ok := mc.mutation.IsOption(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: menu.FieldIsOption,
+		})
+		_node.IsOption = value
+	}
 	if value, ok := mc.mutation.Price(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeJSON,
@@ -216,9 +253,28 @@ func (mc *MenuCreate) createSpec() (*Menu, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
+	if nodes := mc.mutation.CategoryIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   menu.CategoryTable,
+			Columns: menu.CategoryPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: category.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	if nodes := mc.mutation.ImagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: false,
 			Table:   menu.ImagesTable,
 			Columns: []string{menu.ImagesColumn},

@@ -11,11 +11,15 @@ const (
 	FieldName = "name"
 	// FieldDescription holds the string denoting the description field in the database.
 	FieldDescription = "description"
+	// FieldIsOption holds the string denoting the isoption field in the database.
+	FieldIsOption = "is_option"
 	// FieldPrice holds the string denoting the price field in the database.
 	FieldPrice = "price"
 
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
+	// EdgeCategory holds the string denoting the category edge name in mutations.
+	EdgeCategory = "category"
 	// EdgeImages holds the string denoting the images edge name in mutations.
 	EdgeImages = "images"
 	// EdgeOptions holds the string denoting the options edge name in mutations.
@@ -30,8 +34,13 @@ const (
 	OwnerInverseTable = "restaurants"
 	// OwnerColumn is the table column denoting the owner relation/edge.
 	OwnerColumn = "menu_owner"
+	// CategoryTable is the table the holds the category relation/edge. The primary key declared below.
+	CategoryTable = "category_menus"
+	// CategoryInverseTable is the table name for the Category entity.
+	// It exists in this package in order to avoid circular dependency with the "category" package.
+	CategoryInverseTable = "categories"
 	// ImagesTable is the table the holds the images relation/edge.
-	ImagesTable = "files"
+	ImagesTable = "menus"
 	// ImagesInverseTable is the table name for the File entity.
 	// It exists in this package in order to avoid circular dependency with the "file" package.
 	ImagesInverseTable = "files"
@@ -46,17 +55,20 @@ var Columns = []string{
 	FieldID,
 	FieldName,
 	FieldDescription,
+	FieldIsOption,
 	FieldPrice,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the Menu type.
 var ForeignKeys = []string{
-	"category_menus",
 	"menu_owner",
-	"order_field_menu",
+	"menu_images",
 }
 
 var (
+	// CategoryPrimaryKey and CategoryColumn2 are the table columns denoting the
+	// primary key for the category relation (M2M).
+	CategoryPrimaryKey = []string{"category_id", "menu_id"}
 	// OptionsPrimaryKey and OptionsColumn2 are the table columns denoting the
 	// primary key for the options relation (M2M).
 	OptionsPrimaryKey = []string{"menu_id", "option_id"}

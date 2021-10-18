@@ -11,6 +11,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/pkg/errors"
+	"github.com/tidwall/gjson"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/net/http2"
@@ -20,6 +21,7 @@ import (
 	"io"
 	"io/ioutil"
 	"lightServer/ent"
+	"lightServer/ent/authorize"
 	"lightServer/mig/migc"
 	"net"
 	"net/http"
@@ -64,7 +66,7 @@ func BuildServer() *serverBuilder {
 			Name:                  "",
 			DefaultDBTimeout:      90 * time.Second,
 			DefaultSessionTimeout: 60 * time.Minute,
-			oauth2:                make(map[string]*oauth2.Config),
+			oauth2:                make(map[string]*oauth2Config),
 		},
 	}
 	mig.Unsafe.HTTPServer.BaseContext = func(listener net.Listener) context.Context {
@@ -243,27 +245,60 @@ func (s *serverBuilder) DialSmartContract(backendDial string, addr common.Addres
 	s.svr.Unsafe.ContractAddress = addr
 	return s
 }
+
 //
-func (s *serverBuilder) OAuth2(serviceName string, endpoint oauth2.Endpoint, clientID, ClientSecret string, scope ...string) *serverBuilder {
-	if _, ok := s.svr.Configs.oauth2[serviceName]; ok {
+func (s *serverBuilder) OAuth2(provider authorize.Provider, endpoint oauth2.Endpoint, clientID, ClientSecret string, profileGetter func(client *http.Client) (gjson.Result, error), scope ...string) *serverBuilder {
+	if _, ok := s.svr.Configs.oauth2[string(provider)]; ok {
 		s.err = ErrOAuth2Exist
 		return s
 	}
-	s.svr.Configs.oauth2[serviceName] = &oauth2.Config{
-		ClientID:     clientID,
-		ClientSecret: ClientSecret,
-		Endpoint:     endpoint,
-		Scopes:       scope,
+	s.svr.Configs.oauth2[string(provider)] = &oauth2Config{
+		conf: &oauth2.Config{
+			ClientID:     clientID,
+			ClientSecret: ClientSecret,
+			Endpoint:     endpoint,
+			Scopes:       scope,
+		},
+		provider:   provider,
+		getProfile: profileGetter,
 	}
 	return s
 }
 
 func (s *serverBuilder) Google(clientID, ClientSecret string) *serverBuilder {
-	s.OAuth2("google", google.Endpoint, clientID, ClientSecret,
-		"openid",
-		"profile",
-		"email",
+	s.OAuth2(authorize.ProviderGoogle, google.Endpoint, clientID, ClientSecret,
+		func(client *http.Client) (gjson.Result, error) {
+			res, err := client.Get("https://www.googleapis.com/oauth2/v3/userinfo")
+			if err != nil {
+				return gjson.Parse("{}"), err
+			}
+			defer res.Body.Close()
+
+			resbts, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				return gjson.Parse("{}"), err
+			}
+			if !gjson.ValidBytes(resbts) {
+				return gjson.Parse("{}"), errors.New(fmt.Sprintf("Invalid json got %s", string(resbts)))
+			}
+			return gjson.ParseBytes(resbts), nil
+		},
+		[]string{
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile",
+		}...,
 	)
+	return s
+}
+
+func (s *serverBuilder) DNS(dns string) *serverBuilder {
+	if s.err != nil{
+		return s
+	}
+	s.svr.Configs.url, s.err = url.Parse(dns)
+	if s.err != nil{
+		return s
+	}
 	return s
 }
 
@@ -272,11 +307,20 @@ func (s *serverBuilder) Build() (*MakItGo, error) {
 	if s.err != nil {
 		return nil, s.err
 	}
-	var (
-		isHTTP2 = false
-	)
 	//
 	var err error
+	// 손님 계정 생성
+	s.svr.Configs.guest, err = s.svr.Unsafe.DB.User.Get(context.Background(), 1)
+	if err != nil {
+		s.svr.Configs.guest = s.svr.Unsafe.DB.User.Create().SetName("손님").SetAddress("").SaveX(context.Background())
+	}
+
+	//
+	for _, o := range s.svr.Configs.oauth2 {
+		rel, _ := url.Parse(fmt.Sprintf("/auth/callback/%s", o.provider))
+		o.conf.RedirectURL = s.svr.Configs.url.ResolveReference(rel).String()
+	}
+	//
 	// Gin 서버
 	err = s.svr.buildGin()
 	if err != nil {
@@ -295,20 +339,7 @@ func (s *serverBuilder) Build() (*MakItGo, error) {
 		return nil, s.err
 	}
 	if s.svr.Unsafe.HTTPServer.TLSConfig != nil {
-		isHTTP2 = true
 		s.svr.Unsafe.Net = tls.NewListener(s.svr.Unsafe.Net, s.svr.Unsafe.HTTPServer.TLSConfig)
-	}
-	// oauth2
-	for service, config := range s.svr.Configs.oauth2 {
-		redirect := url.URL{
-			Scheme:  "http",
-			Host:    s.svr.Unsafe.HTTPServer.Addr,
-			RawPath: fmt.Sprintf("/auth/callback/%s", service),
-		}
-		if isHTTP2 {
-			redirect.Scheme = "https"
-		}
-		config.RedirectURL = redirect.String()
 	}
 	// 로거
 	s.svr.Unsafe.Logger = zap.New(zapcore.NewTee(s.zcores...))

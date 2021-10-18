@@ -21,6 +21,6 @@ func (OrderField) Fields() []ent.Field {
 // Edges of the OrderField.
 func (OrderField) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("menu", Menu.Type).Required(),
+		edge.To("menu", Menu.Type).Required().Unique(),
 	}
 }

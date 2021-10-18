@@ -15,7 +15,7 @@ const routes: Array<RouteConfig> = [
     },
     {
         alias : '',
-        path : '/favorite',
+        path : '/my',
         component : Favorite
     },
     {

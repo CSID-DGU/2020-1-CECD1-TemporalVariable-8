@@ -57,6 +57,13 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "category_name_category_owner",
+				Unique:  false,
+				Columns: []*schema.Column{CategoriesColumns[1], CategoriesColumns[2]},
+			},
+		},
 	}
 	// FilesColumns holds the columns for the "files" table.
 	FilesColumns = []*schema.Column{
@@ -65,22 +72,13 @@ var (
 		{Name: "mime", Type: field.TypeString},
 		{Name: "name", Type: field.TypeString},
 		{Name: "create_at", Type: field.TypeTime},
-		{Name: "menu_images", Type: field.TypeInt, Nullable: true},
 	}
 	// FilesTable holds the schema information for the "files" table.
 	FilesTable = &schema.Table{
-		Name:       "files",
-		Columns:    FilesColumns,
-		PrimaryKey: []*schema.Column{FilesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:  "files_menus_images",
-				Columns: []*schema.Column{FilesColumns[5]},
-
-				RefColumns: []*schema.Column{MenusColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
+		Name:        "files",
+		Columns:     FilesColumns,
+		PrimaryKey:  []*schema.Column{FilesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
 		Indexes: []*schema.Index{
 			{
 				Name:    "file_file_id_mime",
@@ -107,10 +105,10 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
 		{Name: "description", Type: field.TypeString},
+		{Name: "is_option", Type: field.TypeBool},
 		{Name: "price", Type: field.TypeJSON, Nullable: true},
-		{Name: "category_menus", Type: field.TypeInt, Nullable: true},
 		{Name: "menu_owner", Type: field.TypeInt, Nullable: true},
-		{Name: "order_field_menu", Type: field.TypeInt, Nullable: true},
+		{Name: "menu_images", Type: field.TypeInt, Nullable: true},
 	}
 	// MenusTable holds the schema information for the "menus" table.
 	MenusTable = &schema.Table{
@@ -119,13 +117,6 @@ var (
 		PrimaryKey: []*schema.Column{MenusColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:  "menus_categories_menus",
-				Columns: []*schema.Column{MenusColumns[4]},
-
-				RefColumns: []*schema.Column{CategoriesColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
 				Symbol:  "menus_restaurants_owner",
 				Columns: []*schema.Column{MenusColumns[5]},
 
@@ -133,10 +124,10 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 			{
-				Symbol:  "menus_order_fields_menu",
+				Symbol:  "menus_files_images",
 				Columns: []*schema.Column{MenusColumns[6]},
 
-				RefColumns: []*schema.Column{OrderFieldsColumns[0]},
+				RefColumns: []*schema.Column{FilesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -145,9 +136,11 @@ var (
 	OrdersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "order_at", Type: field.TypeTime},
-		{Name: "delivery_at", Type: field.TypeTime},
-		{Name: "arrive_at", Type: field.TypeTime},
+		{Name: "cooking_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deliver_at", Type: field.TypeTime, Nullable: true},
+		{Name: "complete_at", Type: field.TypeTime, Nullable: true},
 		{Name: "order_who", Type: field.TypeInt, Nullable: true},
+		{Name: "order_where", Type: field.TypeInt, Nullable: true},
 	}
 	// OrdersTable holds the schema information for the "orders" table.
 	OrdersTable = &schema.Table{
@@ -157,9 +150,16 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:  "orders_users_who",
-				Columns: []*schema.Column{OrdersColumns[4]},
+				Columns: []*schema.Column{OrdersColumns[5]},
 
 				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:  "orders_restaurants_where",
+				Columns: []*schema.Column{OrdersColumns[6]},
+
+				RefColumns: []*schema.Column{RestaurantsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -169,6 +169,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "count", Type: field.TypeUint16},
 		{Name: "order_items", Type: field.TypeInt, Nullable: true},
+		{Name: "order_field_menu", Type: field.TypeInt, Nullable: true},
 	}
 	// OrderFieldsTable holds the schema information for the "order_fields" table.
 	OrderFieldsTable = &schema.Table{
@@ -183,14 +184,22 @@ var (
 				RefColumns: []*schema.Column{OrdersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
+			{
+				Symbol:  "order_fields_menus_menu",
+				Columns: []*schema.Column{OrderFieldsColumns[3]},
+
+				RefColumns: []*schema.Column{MenusColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
 		},
 	}
 	// RestaurantsColumns holds the columns for the "restaurants" table.
 	RestaurantsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
-		{Name: "sub_name", Type: field.TypeString, Nullable: true},
-		{Name: "uri", Type: field.TypeJSON, Nullable: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "uri", Type: field.TypeString, Nullable: true},
+		{Name: "restaurant_owner", Type: field.TypeInt, Nullable: true},
 		{Name: "restaurant_avatar", Type: field.TypeInt, Nullable: true},
 		{Name: "restaurant_root", Type: field.TypeInt, Unique: true, Nullable: true},
 		{Name: "restaurant_parent", Type: field.TypeInt, Nullable: true},
@@ -202,32 +211,32 @@ var (
 		PrimaryKey: []*schema.Column{RestaurantsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:  "restaurants_files_avatar",
+				Symbol:  "restaurants_users_owner",
 				Columns: []*schema.Column{RestaurantsColumns[4]},
+
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:  "restaurants_files_avatar",
+				Columns: []*schema.Column{RestaurantsColumns[5]},
 
 				RefColumns: []*schema.Column{FilesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:  "restaurants_restaurants_root",
-				Columns: []*schema.Column{RestaurantsColumns[5]},
+				Columns: []*schema.Column{RestaurantsColumns[6]},
 
 				RefColumns: []*schema.Column{RestaurantsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:  "restaurants_restaurants_parent",
-				Columns: []*schema.Column{RestaurantsColumns[6]},
+				Columns: []*schema.Column{RestaurantsColumns[7]},
 
 				RefColumns: []*schema.Column{RestaurantsColumns[0]},
 				OnDelete:   schema.SetNull,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "restaurant_name_sub_name",
-				Unique:  false,
-				Columns: []*schema.Column{RestaurantsColumns[1], RestaurantsColumns[2]},
 			},
 		},
 	}
@@ -267,6 +276,33 @@ var (
 		Columns:     UsersColumns,
 		PrimaryKey:  []*schema.Column{UsersColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// CategoryMenusColumns holds the columns for the "category_menus" table.
+	CategoryMenusColumns = []*schema.Column{
+		{Name: "category_id", Type: field.TypeInt},
+		{Name: "menu_id", Type: field.TypeInt},
+	}
+	// CategoryMenusTable holds the schema information for the "category_menus" table.
+	CategoryMenusTable = &schema.Table{
+		Name:       "category_menus",
+		Columns:    CategoryMenusColumns,
+		PrimaryKey: []*schema.Column{CategoryMenusColumns[0], CategoryMenusColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:  "category_menus_category_id",
+				Columns: []*schema.Column{CategoryMenusColumns[0]},
+
+				RefColumns: []*schema.Column{CategoriesColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:  "category_menus_menu_id",
+				Columns: []*schema.Column{CategoryMenusColumns[1]},
+
+				RefColumns: []*schema.Column{MenusColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
 	}
 	// MenuOptionsColumns holds the columns for the "menu_options" table.
 	MenuOptionsColumns = []*schema.Column{
@@ -334,6 +370,7 @@ var (
 		RestaurantsTable,
 		ReviewsTable,
 		UsersTable,
+		CategoryMenusTable,
 		MenuOptionsTable,
 		RestaurantHistoriesTable,
 	}
@@ -342,16 +379,19 @@ var (
 func init() {
 	AuthorizesTable.ForeignKeys[0].RefTable = UsersTable
 	CategoriesTable.ForeignKeys[0].RefTable = RestaurantsTable
-	FilesTable.ForeignKeys[0].RefTable = MenusTable
-	MenusTable.ForeignKeys[0].RefTable = CategoriesTable
-	MenusTable.ForeignKeys[1].RefTable = RestaurantsTable
-	MenusTable.ForeignKeys[2].RefTable = OrderFieldsTable
+	MenusTable.ForeignKeys[0].RefTable = RestaurantsTable
+	MenusTable.ForeignKeys[1].RefTable = FilesTable
 	OrdersTable.ForeignKeys[0].RefTable = UsersTable
+	OrdersTable.ForeignKeys[1].RefTable = RestaurantsTable
 	OrderFieldsTable.ForeignKeys[0].RefTable = OrdersTable
-	RestaurantsTable.ForeignKeys[0].RefTable = FilesTable
-	RestaurantsTable.ForeignKeys[1].RefTable = RestaurantsTable
+	OrderFieldsTable.ForeignKeys[1].RefTable = MenusTable
+	RestaurantsTable.ForeignKeys[0].RefTable = UsersTable
+	RestaurantsTable.ForeignKeys[1].RefTable = FilesTable
 	RestaurantsTable.ForeignKeys[2].RefTable = RestaurantsTable
+	RestaurantsTable.ForeignKeys[3].RefTable = RestaurantsTable
 	ReviewsTable.ForeignKeys[0].RefTable = OrdersTable
+	CategoryMenusTable.ForeignKeys[0].RefTable = CategoriesTable
+	CategoryMenusTable.ForeignKeys[1].RefTable = MenusTable
 	MenuOptionsTable.ForeignKeys[0].RefTable = MenusTable
 	MenuOptionsTable.ForeignKeys[1].RefTable = MenusTable
 	RestaurantHistoriesTable.ForeignKeys[0].RefTable = RestaurantsTable

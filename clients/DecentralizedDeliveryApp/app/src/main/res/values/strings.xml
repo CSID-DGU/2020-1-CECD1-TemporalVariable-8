@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">DecentralizedDeliveryApp</string>
+    <string name="title_restaurant">Restaurant</string>
+    <string name="title_search">Search</string>
+    <string name="title_receipt">Receipt</string>
+    <string name="title_settings">Settings</string>
+
+    <string name="menu_search">Search</string>
+
+</resources>

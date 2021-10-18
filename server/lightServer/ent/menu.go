@@ -5,6 +5,7 @@ package ent
 import (
 	"encoding/json"
 	"fmt"
+	"lightServer/ent/file"
 	"lightServer/ent/menu"
 	"lightServer/ent/restaurant"
 	"strings"
@@ -22,27 +23,30 @@ type Menu struct {
 	Name string `json:"name,omitempty"`
 	// Description holds the value of the "description" field.
 	Description string `json:"description,omitempty"`
+	// IsOption holds the value of the "isOption" field.
+	IsOption bool `json:"isOption,omitempty"`
 	// Price holds the value of the "price" field.
 	Price *money.Money `json:"price,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the MenuQuery when eager-loading is set.
-	Edges            MenuEdges `json:"edges"`
-	category_menus   *int
-	menu_owner       *int
-	order_field_menu *int
+	Edges       MenuEdges `json:"edges"`
+	menu_owner  *int
+	menu_images *int
 }
 
 // MenuEdges holds the relations/edges for other nodes in the graph.
 type MenuEdges struct {
 	// Owner holds the value of the owner edge.
 	Owner *Restaurant
+	// Category holds the value of the category edge.
+	Category []*Category
 	// Images holds the value of the images edge.
-	Images []*File
+	Images *File
 	// Options holds the value of the options edge.
 	Options []*Menu
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // OwnerOrErr returns the Owner value or an error if the edge
@@ -59,10 +63,24 @@ func (e MenuEdges) OwnerOrErr() (*Restaurant, error) {
 	return nil, &NotLoadedError{edge: "owner"}
 }
 
-// ImagesOrErr returns the Images value or an error if the edge
+// CategoryOrErr returns the Category value or an error if the edge
 // was not loaded in eager-loading.
-func (e MenuEdges) ImagesOrErr() ([]*File, error) {
+func (e MenuEdges) CategoryOrErr() ([]*Category, error) {
 	if e.loadedTypes[1] {
+		return e.Category, nil
+	}
+	return nil, &NotLoadedError{edge: "category"}
+}
+
+// ImagesOrErr returns the Images value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e MenuEdges) ImagesOrErr() (*File, error) {
+	if e.loadedTypes[2] {
+		if e.Images == nil {
+			// The edge images was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: file.Label}
+		}
 		return e.Images, nil
 	}
 	return nil, &NotLoadedError{edge: "images"}
@@ -71,7 +89,7 @@ func (e MenuEdges) ImagesOrErr() ([]*File, error) {
 // OptionsOrErr returns the Options value or an error if the edge
 // was not loaded in eager-loading.
 func (e MenuEdges) OptionsOrErr() ([]*Menu, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.Options, nil
 	}
 	return nil, &NotLoadedError{edge: "options"}
@@ -83,6 +101,7 @@ func (*Menu) scanValues() []interface{} {
 		&sql.NullInt64{},  // id
 		&sql.NullString{}, // name
 		&sql.NullString{}, // description
+		&sql.NullBool{},   // isOption
 		&[]byte{},         // price
 	}
 }
@@ -90,9 +109,8 @@ func (*Menu) scanValues() []interface{} {
 // fkValues returns the types for scanning foreign-keys values from sql.Rows.
 func (*Menu) fkValues() []interface{} {
 	return []interface{}{
-		&sql.NullInt64{}, // category_menus
 		&sql.NullInt64{}, // menu_owner
-		&sql.NullInt64{}, // order_field_menu
+		&sql.NullInt64{}, // menu_images
 	}
 }
 
@@ -118,33 +136,32 @@ func (m *Menu) assignValues(values ...interface{}) error {
 	} else if value.Valid {
 		m.Description = value.String
 	}
+	if value, ok := values[2].(*sql.NullBool); !ok {
+		return fmt.Errorf("unexpected type %T for field isOption", values[2])
+	} else if value.Valid {
+		m.IsOption = value.Bool
+	}
 
-	if value, ok := values[2].(*[]byte); !ok {
-		return fmt.Errorf("unexpected type %T for field price", values[2])
+	if value, ok := values[3].(*[]byte); !ok {
+		return fmt.Errorf("unexpected type %T for field price", values[3])
 	} else if value != nil && len(*value) > 0 {
 		if err := json.Unmarshal(*value, &m.Price); err != nil {
 			return fmt.Errorf("unmarshal field price: %v", err)
 		}
 	}
-	values = values[3:]
+	values = values[4:]
 	if len(values) == len(menu.ForeignKeys) {
 		if value, ok := values[0].(*sql.NullInt64); !ok {
-			return fmt.Errorf("unexpected type %T for edge-field category_menus", value)
-		} else if value.Valid {
-			m.category_menus = new(int)
-			*m.category_menus = int(value.Int64)
-		}
-		if value, ok := values[1].(*sql.NullInt64); !ok {
 			return fmt.Errorf("unexpected type %T for edge-field menu_owner", value)
 		} else if value.Valid {
 			m.menu_owner = new(int)
 			*m.menu_owner = int(value.Int64)
 		}
-		if value, ok := values[2].(*sql.NullInt64); !ok {
-			return fmt.Errorf("unexpected type %T for edge-field order_field_menu", value)
+		if value, ok := values[1].(*sql.NullInt64); !ok {
+			return fmt.Errorf("unexpected type %T for edge-field menu_images", value)
 		} else if value.Valid {
-			m.order_field_menu = new(int)
-			*m.order_field_menu = int(value.Int64)
+			m.menu_images = new(int)
+			*m.menu_images = int(value.Int64)
 		}
 	}
 	return nil
@@ -153,6 +170,11 @@ func (m *Menu) assignValues(values ...interface{}) error {
 // QueryOwner queries the owner edge of the Menu.
 func (m *Menu) QueryOwner() *RestaurantQuery {
 	return (&MenuClient{config: m.config}).QueryOwner(m)
+}
+
+// QueryCategory queries the category edge of the Menu.
+func (m *Menu) QueryCategory() *CategoryQuery {
+	return (&MenuClient{config: m.config}).QueryCategory(m)
 }
 
 // QueryImages queries the images edge of the Menu.
@@ -192,6 +214,8 @@ func (m *Menu) String() string {
 	builder.WriteString(m.Name)
 	builder.WriteString(", description=")
 	builder.WriteString(m.Description)
+	builder.WriteString(", isOption=")
+	builder.WriteString(fmt.Sprintf("%v", m.IsOption))
 	builder.WriteString(", price=")
 	builder.WriteString(fmt.Sprintf("%v", m.Price))
 	builder.WriteByte(')')

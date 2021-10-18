@@ -35,7 +35,7 @@
   },
   "nav" : {
     "search" : "검색",
-    "favorite" : "선호음식점",
+    "my_restaurant" : "내 음식점",
     "history" : "주문기록"
   },
   "word": {
