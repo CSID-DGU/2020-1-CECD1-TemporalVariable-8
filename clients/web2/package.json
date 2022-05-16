@@ -15,7 +15,7 @@
     "chai-as-promised": "^7.1.1",
     "core-js": "^3.6.5",
     "fp-ts": "^2.6.2",
-    "moment": "^2.26.0",
+    "moment": "^2.29.2",
     "null-loader": "^4.0.0",
     "register-service-worker": "^1.7.1",
     "vue": "^2.6.11",
